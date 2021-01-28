@@ -5,7 +5,8 @@
 ## Primeiros Passos
 
 * [Configurações Iniciais](primeiros-passos/configuracoes-iniciais.md)
-* [Conceitos Básicos](primeiros-passos/frame.md)
+* [Guia Rápido](primeiros-passos/frame/README.md)
+  * [Exemplo de Caso de Uso](primeiros-passos/frame/exemplo-de-caso-de-uso.md)
 
 ## Conceitos Principais
 
@@ -15,7 +16,12 @@
 * [Repositórios](conceitos-principais/repositorios.md)
 * [Execuções](conceitos-principais/execucoes.md)
 
+## Casos de Uso
+
+* [Untitled](casos-de-uso/untitled.md)
+
 ## Aplicações
 
+* [Previsão de Demanda](aplicacoes/previsao-de-demanda.md)
 * [Roteirizador](aplicacoes/roteirizador.md)
 
