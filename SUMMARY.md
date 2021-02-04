@@ -18,10 +18,13 @@
 
 ## Casos de Uso
 
-* [Untitled](casos-de-uso/untitled.md)
+* [Enviando arquivos para o Repositório](casos-de-uso/untitled.md)
 
 ## Aplicações
 
-* [Previsão de Demanda](aplicacoes/previsao-de-demanda.md)
-* [Roteirizador](aplicacoes/roteirizador.md)
+* [Catálogo de Aplicações](aplicacoes/catalogo-de-aplicacoes/README.md)
+  * [Regressão](aplicacoes/catalogo-de-aplicacoes/regressao/README.md)
+    * [Previsão de Demanda](aplicacoes/catalogo-de-aplicacoes/regressao/previsao-de-demanda.md)
+  * [Otimização](aplicacoes/catalogo-de-aplicacoes/otimizacao/README.md)
+    * [Roteirizador](aplicacoes/catalogo-de-aplicacoes/otimizacao/roteirizador.md)
 
