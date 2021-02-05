@@ -74,8 +74,6 @@ Informações do _header_ faltantes ou parâmetros de _query_ malformados
 {% endapi-method-spec %}
 {% endapi-method %}
 
-
-
 {% api-method method="post" host="https://vbrain.visagio.com" path="/api/v1/repository" %}
 {% api-method-summary %}
 Criar Repositórios
