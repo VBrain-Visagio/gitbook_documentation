@@ -5,8 +5,8 @@
 O VBrain se apoia em alguns conceitos essenciais para a utilização correta da plataforma, que são:
 
 * [Organizações, Aplicações e Clients](../../conceitos-principais/estrutura-basica/)
-* [Repositórios](../../conceitos-principais/repositorios.md)
-* [Execuções](../../conceitos-principais/execucoes.md)
+* [Repositórios](../../conceitos-principais/repositorios/)
+* [Execuções](../../conceitos-principais/execucoes/)
 
 ### Organizações, Aplicações e Clients
 
@@ -20,7 +20,7 @@ Desta forma, temos que um usuário pode estar em uma ou mais **organizações**,
 
 Once you're strong enough, save the world:
 
-## Mãos à Obra! 💪 
+## 💪 Mãos à Obra! 
 
 Na próxima página iremos colocar os conhecimentos adquiridos em prática e executar nossa primeira aplicação!
 

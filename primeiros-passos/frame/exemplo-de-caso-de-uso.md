@@ -30,7 +30,7 @@ headers['repository_id'] = repository_id
 print(f'O repositório criado possui id {repository_id}')
 ```
 
-Com as credenciais devidamente configuradas, o próximo passo é criar um [**Repositório**](../../conceitos-principais/repositorios.md) ****para ser utilizado na **Execução**.
+Com as credenciais devidamente configuradas, o próximo passo é criar um [**Repositório**](../../conceitos-principais/repositorios/) ****para ser utilizado na **Execução**.
 
 O **Repositório** é essencialmente uma pasta onde serão salvos os arquivos de _Input_, parâmetros da execução e _Output_ das **Execuções**, sendo ponto central do fluxo de utilização da plataforma.
 
@@ -38,7 +38,7 @@ Para o caso de uso atual estaremos criando um **Repositório** vazio, ou seja, s
 
 Mais detalhes sobre o funcionamento do **Repositório** podem ser encontrados em:
 
-{% page-ref page="../../conceitos-principais/repositorios.md" %}
+{% page-ref page="../../conceitos-principais/repositorios/" %}
 
 ## Iniciando uma Execução
 
@@ -61,7 +61,7 @@ Tais parâmetros são enviados ao _endpoint_ `/job/execute` __por meio do _json_
 
 Mais detalhes sobre o funcionamento da **Execução** podem ser encontrados em:
 
-{% page-ref page="../../conceitos-principais/execucoes.md" %}
+{% page-ref page="../../conceitos-principais/execucoes/" %}
 
 ## Acompanhando a Execução
 
@@ -114,7 +114,7 @@ import requests
 
 #declaração de variáveis do header
 headers = {'organization_id':'<nome da sua organização>',
-           'application_id':'<nome da applicação>',
+           'application_id':'Tutorial',
            'client_id':'<nome do client utilizado>',
            'username':'<seu username>',
            'x-api-key':'<apikey gerada previamente>'}
@@ -162,4 +162,8 @@ else: # se houve erro, reporta o erro
 {% endtabs %}
 
 Mais casos de uso e outras aplicações estão disponíveis em:
+
+## Aprofundando o Conhecimento
+
+Agora que já possui um conhecimento inicial sobre a utilização da plataforma do VBrain, recomendamos continuar para a próxima seção:
 

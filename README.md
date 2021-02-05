@@ -1,27 +1,20 @@
 # O que é o VBrain?
 
-## Getting Super Powers
+O VBrain é uma plataforma criada pela [Visagio](https://visagio.com.br) com o objetivo de fornecer soluções para simplificar e democratizar a aplicação de Inteligência Artificial nos negócios. 
 
-Becoming a super hero is a fairly straight forward process:
+A plataforma provê uma suíte de soluções suportadas por dados e Inteligência Artificial de forma padronizada e escalável com o objetivo de trazer eficiência operacional, reduzindo custos e aumentando a receita dos nossos clientes.
 
-```
-$ give me super-powers
-```
+## 🚀 Como utilizar o VBrain?
 
-{% hint style="info" %}
- Super-powers are granted randomly so please submit an issue if you're not happy with yours.
-{% endhint %}
+A plataforma pode ser utilizada tanto pelo nosso [portal de aplicações](https://vbrain.visagio.com) \(em desenvolvimento\), como pela nossa [API](https://vbrain.visagio.com/api/v1/).
 
-Once you're strong enough, save the world:
+Os tutoriais a seguir utilizam _scripts_ em Python para utilização da API da plataforma. Entretanto, quaisquer linguagens com acesso a requisições HTTP podem ser utilizadas.
 
-{% code title="hello.sh" %}
-```bash
-# Ain't no code for that yet, sorry
-echo 'You got to trust me on this, I saved the world'
-```
-{% endcode %}
+## 🤔 Como funciona o VBrain?
 
-## Como utilizar o VBrain?
+Após realizar os testes iniciais do VBrain é recomendado o entendimento da sua [estrutura básica](conceitos-principais/estrutura-basica/), assim como dos conceitos de [**Repositórios** ](conceitos-principais/repositorios/)e [**Execuções**](conceitos-principais/execucoes/).
 
+## 🧠 Quais soluções estão disponíveis no VBrain?
 
+O catálogo de soluções do VBrain está em constante crescimento e pode ser acessado em:
 

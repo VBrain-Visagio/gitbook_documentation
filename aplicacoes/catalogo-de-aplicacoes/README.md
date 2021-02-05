@@ -1,4 +1,4 @@
-# Catálogo de Aplicações
+# Catálogo de Soluções
 
 {% page-ref page="regressao/" %}
 
