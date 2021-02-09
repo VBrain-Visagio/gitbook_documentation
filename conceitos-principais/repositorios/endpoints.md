@@ -16,6 +16,10 @@ _Endpoint_ que retorna uma lista de **Repositórios** para o **Client** atual**.
 {% api-method-spec %}
 {% api-method-request %}
 {% api-method-headers %}
+{% api-method-parameter name="username" type="string" required=true %}
+Usuário utilizando a API
+{% endapi-method-parameter %}
+
 {% api-method-parameter name="organization\_id" type="string" required=true %}
 Nome da **Organização**
 {% endapi-method-parameter %}
@@ -28,7 +32,7 @@ Nome da **Aplicação**
 Nome do **Client**
 {% endapi-method-parameter %}
 
-{% api-method-parameter name="x-api-key" type="string" required=false %}
+{% api-method-parameter name="x-api-key" type="string" required=true %}
 API-Key gerada 
 {% endapi-method-parameter %}
 {% endapi-method-headers %}
@@ -86,6 +90,10 @@ _Endpoint_ que cria um novo **Repositório** para o **Client** atual**.**
 {% api-method-spec %}
 {% api-method-request %}
 {% api-method-headers %}
+{% api-method-parameter name="username" type="string" required=true %}
+Usuário utilizando a API
+{% endapi-method-parameter %}
+
 {% api-method-parameter name="organization\_id" type="string" required=true %}
 Nome da **Organização**
 {% endapi-method-parameter %}
@@ -98,7 +106,7 @@ Nome da **Aplicação**
 Nome do **Client**
 {% endapi-method-parameter %}
 
-{% api-method-parameter name="x-api-key" type="string" required=false %}
+{% api-method-parameter name="x-api-key" type="string" required=true %}
 API-Key gerada 
 {% endapi-method-parameter %}
 {% endapi-method-headers %}
@@ -166,6 +174,10 @@ Id do **Repositório** criado anteriormente
 {% endapi-method-path-parameters %}
 
 {% api-method-headers %}
+{% api-method-parameter name="username" type="string" required=true %}
+Usuário utilizando a API
+{% endapi-method-parameter %}
+
 {% api-method-parameter name="organization\_id" type="string" required=true %}
 Nome da **Organização**
 {% endapi-method-parameter %}
@@ -178,7 +190,7 @@ Nome da **Aplicação**
 Nome do **Client**
 {% endapi-method-parameter %}
 
-{% api-method-parameter name="x-api-key" type="string" required=false %}
+{% api-method-parameter name="x-api-key" type="string" required=true %}
 API-Key gerada 
 {% endapi-method-parameter %}
 {% endapi-method-headers %}
@@ -259,6 +271,10 @@ Id do **Repositório** criado anteriormente
 {% endapi-method-path-parameters %}
 
 {% api-method-headers %}
+{% api-method-parameter name="username" type="string" required=true %}
+Usuário utilizando a API
+{% endapi-method-parameter %}
+
 {% api-method-parameter name="organization\_id" type="string" required=true %}
 Nome da **Organização**
 {% endapi-method-parameter %}
@@ -271,7 +287,7 @@ Nome da **Aplicação**
 Nome do **Client**
 {% endapi-method-parameter %}
 
-{% api-method-parameter name="x-api-key" type="string" required=false %}
+{% api-method-parameter name="x-api-key" type="string" required=true %}
 API-Key gerada 
 {% endapi-method-parameter %}
 {% endapi-method-headers %}
@@ -347,6 +363,10 @@ Id do **Repositório** criado anteriormente
 {% endapi-method-path-parameters %}
 
 {% api-method-headers %}
+{% api-method-parameter name="username" type="string" required=true %}
+Usuário utilizando a API
+{% endapi-method-parameter %}
+
 {% api-method-parameter name="organization\_id" type="string" required=true %}
 Nome da **Organização**
 {% endapi-method-parameter %}
@@ -359,7 +379,7 @@ Nome da **Aplicação**
 Nome do **Client**
 {% endapi-method-parameter %}
 
-{% api-method-parameter name="x-api-key" type="string" required=false %}
+{% api-method-parameter name="x-api-key" type="string" required=true %}
 API-Key gerada 
 {% endapi-method-parameter %}
 {% endapi-method-headers %}
@@ -421,6 +441,10 @@ Id do **Repositório** criado anteriormente
 {% endapi-method-path-parameters %}
 
 {% api-method-headers %}
+{% api-method-parameter name="username" type="string" required=true %}
+Usuário utilizando a API
+{% endapi-method-parameter %}
+
 {% api-method-parameter name="organization\_id" type="string" required=true %}
 Nome da **Organização**
 {% endapi-method-parameter %}
@@ -433,7 +457,7 @@ Nome da **Aplicação**
 Nome do **Client**
 {% endapi-method-parameter %}
 
-{% api-method-parameter name="x-api-key" type="string" required=false %}
+{% api-method-parameter name="x-api-key" type="string" required=true %}
 API-Key gerada 
 {% endapi-method-parameter %}
 {% endapi-method-headers %}
@@ -442,7 +466,7 @@ API-Key gerada
 {% api-method-response %}
 {% api-method-response-example httpCode=200 %}
 {% api-method-response-example-description %}
-_Json_ do arquivos de parâmetros do **Repositório**
+_Json_ do arquivo de parâmetros do **Repositório**
 {% endapi-method-response-example-description %}
 
 ```
