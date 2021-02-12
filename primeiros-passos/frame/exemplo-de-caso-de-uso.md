@@ -70,13 +70,19 @@ import time
 
 response = requests.get(f'https://vbrain.visagio.com/api/v1/job/{job_id}',
                         headers = headers)
-
+                        
+attempt = 0
 while response.status_code != 200: #enquanto a execução não terminou
+    if attempt >= 12: # timeout máximo de execução de 120 segundos
+        raise Exception(f'Problema na requisicao a /api/v1/job/{job_id}')
+        
     print(f"Aplicação em execução! Status atual: {response.json()['job_status']}")
-    time.sleep(5) #aguarda 5 segundos para checar novamente
+
+    time.sleep(10) #aguarda 10 segundos para checar novamente
     
     response = requests.get(f'https://vbrain.visagio.com/api/v1/job/{job_id}',
                             headers = headers)
+    attempt += 1
                             
 print(f"Aplicação em execução! Status atual: {response.json()['job_status']}")
 ```
@@ -138,13 +144,19 @@ import time
 
 response = requests.get(f'https://vbrain.visagio.com/api/v1/job/{job_id}',
                         headers = headers)
-
+                        
+attempt = 0
 while response.status_code != 200: #enquanto a execução não terminou
+    if attempt >= 12: # timeout máximo de execução de 120 segundos
+        raise Exception(f'Problema na requisicao a /api/v1/job/{job_id}')
+        
     print(f"Aplicação em execução! Status atual: {response.json()['job_status']}")
-    time.sleep(5) #aguarda 5 segundos para checar novamente
+
+    time.sleep(10) #aguarda 10 segundos para checar novamente
     
     response = requests.get(f'https://vbrain.visagio.com/api/v1/job/{job_id}',
                             headers = headers)
+    attempt += 1
                             
 print(f"Aplicação em execução! Status atual: {response.json()['job_status']}")
                             
