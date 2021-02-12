@@ -32,8 +32,6 @@ print(f'O repositório criado possui id {repository_id}')
 
 Com as credenciais devidamente configuradas, o próximo passo é criar um [**Repositório**](../../conceitos-principais/repositorios/) ****para ser utilizado na **Execução**.
 
-O **Repositório** é essencialmente uma pasta onde serão salvos os arquivos de _Input_, parâmetros da execução e _Output_ das **Execuções**, sendo ponto central do fluxo de utilização da plataforma.
-
 Para o caso de uso atual estaremos criando um **Repositório** vazio, ou seja, sem arquivos na pasta de _Input._ Cada aplicação possui um padrão de quais arquivos são necessários e/ou opcionais para a execução, como pode ser visto na [seção de aplicações](../../aplicacoes/catalogo-de-aplicacoes/). A aplicação "Tutorial" não necessita de nenhum arquivo para funcionamento.
 
 Mais detalhes sobre o funcionamento do **Repositório** podem ser encontrados em:
@@ -52,8 +50,6 @@ print(f'O job criado possui id {job_id}')
 ```
 
 O _repository\_id_ retornado previamente será utilizado para a criação de uma **Execução.**
-
-Uma **Execução** é basicamente a utilização da aplicação. Os arquivos passados no **Repositório** juntamente com os parâmetros enviados serão utilizados pela aplicação para gerar o resultado esperado.
 
 A aplicação "Tutorial" recebe como parâmetros duas variáveis, $$a$$e $$b$$ _,_ que serão utilizadas para calcular o resultado final de $$a*b$$. Em outras aplicações esses parâmetros serão as suas datas para previsão de demandas, restrições para roteirização, etc...
 

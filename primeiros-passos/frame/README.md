@@ -41,13 +41,19 @@ Esse conceitos são explicados em maior detalhe na seção:
 
 ### Repositórios
 
+O **Repositório** é essencialmente uma pasta onde são salvos os arquivos de _Input_, parâmetros da execução e _Output_ das **Execuções**, sendo ponto central do fluxo de utilização da plataforma.
 
+Esse conceitos são explicados em maior detalhe na seção:
 
 {% page-ref page="../../conceitos-principais/repositorios/" %}
 
 ### Execuções
 
+Uma **Execução** é basicamente a utilização da aplicação. Os arquivos passados no **Repositório** juntamente com os parâmetros enviados serão utilizados pela aplicação para gerar o resultado esperado.
 
+Um **Repositório** pode ser utilizado por múltiplas **Execuções**, reutilizando os arquivos de _Input_ com a possibilidade de alterar parâmetros. Isso possibilita a realização de estratégias de _Otimização de Hiperparâmetros_ ou de testes para _fine tuning_ de modelos.
+
+Esse conceitos são explicados em maior detalhe na seção:
 
 {% page-ref page="../../conceitos-principais/execucoes/" %}
 
