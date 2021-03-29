@@ -12,7 +12,7 @@ Os tutoriais a seguir utilizam _scripts_ em Python para utilização da API da p
 
 ## 🤔 Como funciona o VBrain?
 
-Após realizar os testes iniciais do VBrain é recomendado o entendimento da sua [estrutura básica](conceitos-principais/estrutura-basica/), assim como dos conceitos de [**Repositórios** ](conceitos-principais/repositorios/)e [**Execuções**](conceitos-principais/execucoes/).
+Após realizar os testes iniciais do VBrain é recomendado o entendimento da sua [estrutura básica](primeiros-passos/conceitos-principais/estrutura-basica/), assim como dos conceitos de [**Repositórios** ](primeiros-passos/conceitos-principais/repositorios/)e [**Execuções**](primeiros-passos/conceitos-principais/execucoes/).
 
 ## 🧠 Quais soluções estão disponíveis no VBrain?
 

@@ -32,7 +32,7 @@ print(f'O repositório criado possui id {repository_id}')
 
 Com as credenciais devidamente configuradas, o próximo passo é criar um [**Repositório**](../../conceitos-principais/repositorios/) ****para ser utilizado na **Execução**.
 
-Para o caso de uso atual estaremos criando um **Repositório** vazio, ou seja, sem arquivos na pasta de _Input._ Cada aplicação possui um padrão de quais arquivos são necessários e/ou opcionais para a execução, como pode ser visto na [seção de aplicações](../../aplicacoes/catalogo-de-aplicacoes/). A aplicação "Tutorial" não necessita de nenhum arquivo para funcionamento.
+Para o caso de uso atual estaremos criando um **Repositório** vazio, ou seja, sem arquivos na pasta de _Input._ Cada aplicação possui um padrão de quais arquivos são necessários e/ou opcionais para a execução, como pode ser visto na [seção de aplicações](../../../casos-de-uso/catalogo-de-aplicacoes.md). A aplicação "Tutorial" não necessita de nenhum arquivo para funcionamento.
 
 Mais detalhes sobre o funcionamento do **Repositório** podem ser encontrados em:
 
