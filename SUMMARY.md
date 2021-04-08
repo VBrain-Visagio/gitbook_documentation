@@ -23,8 +23,12 @@
 
 * [Ressuprimento Automático](casos-de-uso/catalogo-de-aplicacoes/README.md)
   * [Notebooks](casos-de-uso/catalogo-de-aplicacoes/notebooks.md)
-* [Otimização de Escalas de Trabalho](casos-de-uso/otimizacao-de-escalas-de-trabalho.md)
-* [Previsão de Demanda](casos-de-uso/previsao-de-demanda.md)
-* [Roteirização de Força de Campo](casos-de-uso/roteirizacao-de-forca-de-campo.md)
-* [Otimização de Estoques](casos-de-uso/otimizacao-de-estoques.md)
+* [Otimização de Escalas de Trabalho](casos-de-uso/otimizacao-de-escalas-de-trabalho/README.md)
+  * [Notebooks](casos-de-uso/otimizacao-de-escalas-de-trabalho/notebooks.md)
+* [Previsão de Demanda](casos-de-uso/previsao-de-demanda/README.md)
+  * [Notebooks](casos-de-uso/previsao-de-demanda/notebooks.md)
+* [Roteirização de Força de Campo](casos-de-uso/roteirizacao-de-forca-de-campo/README.md)
+  * [Notebooks](casos-de-uso/roteirizacao-de-forca-de-campo/notebooks.md)
+* [Otimização de Estoques](casos-de-uso/otimizacao-de-estoques/README.md)
+  * [Notebooks](casos-de-uso/otimizacao-de-estoques/notebooks.md)
 
