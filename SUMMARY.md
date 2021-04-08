@@ -21,7 +21,8 @@
 
 ## Casos de Uso
 
-* [Ressuprimento Automático](casos-de-uso/catalogo-de-aplicacoes.md)
+* [Ressuprimento Automático](casos-de-uso/catalogo-de-aplicacoes/README.md)
+  * [Notebooks](casos-de-uso/catalogo-de-aplicacoes/notebooks.md)
 * [Otimização de Escalas de Trabalho](casos-de-uso/otimizacao-de-escalas-de-trabalho.md)
 * [Previsão de Demanda](casos-de-uso/previsao-de-demanda.md)
 * [Roteirização de Força de Campo](casos-de-uso/roteirizacao-de-forca-de-campo.md)
