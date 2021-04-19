@@ -1,4 +1,4 @@
-# O que é o VBrain?
+# O que é o VBrain? (Edição)
 
 O VBrain é uma plataforma criada pela [Visagio](https://visagio.com.br) com o objetivo de fornecer soluções para simplificar e democratizar a aplicação de Inteligência Artificial nos negócios. 
 
