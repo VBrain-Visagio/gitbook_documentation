@@ -21,6 +21,8 @@
 
 ## Casos de Uso
 
+* [Recomendação de Produtos](casos-de-uso/recomendacao-de-produtos/README.md)
+  * [Notebooks](casos-de-uso/recomendacao-de-produtos/notebooks.md)
 * [Ressuprimento Automático](casos-de-uso/catalogo-de-aplicacoes/README.md)
   * [Notebooks](casos-de-uso/catalogo-de-aplicacoes/notebooks.md)
 * [Otimização de Escalas de Trabalho](casos-de-uso/otimizacao-de-escalas-de-trabalho/README.md)
