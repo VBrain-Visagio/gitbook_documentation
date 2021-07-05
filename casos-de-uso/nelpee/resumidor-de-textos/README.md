@@ -1,0 +1,2 @@
+# Resumidor de Textos
+

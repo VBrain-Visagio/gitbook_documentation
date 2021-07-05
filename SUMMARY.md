@@ -21,6 +21,17 @@
 
 ## Casos de Uso
 
+* [Nelpee](casos-de-uso/nelpee/README.md)
+  * [Mapa de Aderência de Contratos](casos-de-uso/nelpee/mapa-de-aderencia-de-contratos/README.md)
+    * [Notebooks](casos-de-uso/nelpee/mapa-de-aderencia-de-contratos/notebooks.md)
+  * [Busca de Condições em Contratos](casos-de-uso/nelpee/busca-de-condicoes-em-contratos/README.md)
+    * [Notebooks](casos-de-uso/nelpee/busca-de-condicoes-em-contratos/notebooks.md)
+  * [Resumidor de Textos](casos-de-uso/nelpee/resumidor-de-textos/README.md)
+    * [Notebooks](casos-de-uso/nelpee/resumidor-de-textos/notebooks.md)
+  * [Palavras Mais Citadas](casos-de-uso/nelpee/palavras-mais-citadas/README.md)
+    * [Notebooks](casos-de-uso/nelpee/palavras-mais-citadas/notebooks.md)
+  * [Classificador de Comentários](casos-de-uso/nelpee/classificador-de-comentarios/README.md)
+    * [Notebooks](casos-de-uso/nelpee/classificador-de-comentarios/notebooks.md)
 * [Recomendação de Produtos](casos-de-uso/recomendacao-de-produtos/README.md)
   * [Notebooks](casos-de-uso/recomendacao-de-produtos/notebooks.md)
 * [Ressuprimento Automático](casos-de-uso/catalogo-de-aplicacoes/README.md)
