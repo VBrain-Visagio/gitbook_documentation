@@ -27,7 +27,7 @@ Para execução do modelo os dados devem obedecer as restrições supracitadas. 
 
 #### Opcionais
 
--	**group_comment = *True/False*:** Por padrão, esse parâmetro está configurado como True. Isso significa que cada comentário possui uma ou mais categorias, isto é, os dados de entrada possuem uma coluna de comentários (Comment) e uma categórica (Group). Nesse cenário, o modelo irá condensar todos os textos que pertencem a uma mesma categoria e então realizar o resumo de todo o corpus gerado. Caso o arquivo de entrada contenha apenas uma coluna contendo os comentários, o parâmetro group_comment deverá ser configurado como False e dessa forma, o modelo considerará todas as linhas de texto para realizar o resumo.
+-	**group_comment = *0/1*:** Por padrão, esse parâmetro está configurado como 0. Isso significa que cada comentário possui uma ou mais categorias, isto é, os dados de entrada possuem uma coluna de comentários (Comment) e uma categórica (Group). Nesse cenário, o modelo irá condensar todos os textos que pertencem a uma mesma categoria e então realizar o resumo de todo o corpus gerado. Caso o arquivo de entrada contenha apenas uma coluna contendo os comentários, o parâmetro group_comment deverá ser configurado como 1 e dessa forma, o modelo considerará todas as linhas de texto para realizar o resumo.
 
 ## Outputs
 A execução do modelo irá gerar um arquivo chamado summary.xlsx. Este arquivo terá uma estrutura muito semelhante aos dados de entrada, como mostrado abaixo:
