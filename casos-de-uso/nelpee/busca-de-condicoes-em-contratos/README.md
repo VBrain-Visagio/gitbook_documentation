@@ -31,6 +31,8 @@ Arquivo Excel chamado Query.xlsx. Este documento deve possuir termos que irão s
 Esta planilha deve possuir os seguintes campos.
 -	**Search *(texto)*:** Termo que descreve a condição a ser buscada. Vários termos podem ser utilizados para a mesma condição. Caso sejam inseridas diversos termos para a mesma condição, o modelo irá considerar as diversas opções durante a busca, podendo ter um resultado mais acurado.
 -	**Label *(texto)*:** Nome da classe à qual o respectivo termo na coluna Search pertence. Label será o nome dado à classe dos textos encontrados com os respectivos termos.
+-	**Tag *(texto)*:** Aceita apenas os valores "keyword" e  "case". Caso a query possua a tag "keyword", o algoritmos irá fazer a busca por palavras-chaves. É recomendável que o parâmetro Search sejam palavras a serem buscadas neste caso.  Caso seja "case", o algortimo irá utilizar a busca por contexto. É recomendável que o parâmetro Search seja exemplos de trechos exemplos a serem buscados.
+-	**Consider *(texto)*:** Aceita apenas os valores "yes" e  "no". Esta condição permite que o usuário especifique mais a busca dando contra-exemplos, que não devem ser retornados. Imagine que você queira buscar em um documento trechos referentes a multas e por isso cadastrou a palavra-chave "Multa". Apesar disso, você não quer trechos de multa por atraso de entrega, então você pode cadastrar como contra exemplo a palavra-chave "Multa pora atraso de entrega". O algoritmo irá detectar que é uma condição de multa, mas irá identificar também que há um match com o contra-exemplo, não retornando este caso.
 
 Como exemplo, pode-se ter os seguintes termos em Search: Lei Geral de Proteção de Dados, Confidencialidade, Segurança da Informação. Estes termos podem pertencer à Label LGDP e Confidencialidade. Os textos encontrados na busca que pertencerem a este assunto serão rotulados como LGPD e Confidencialidade.
 
@@ -59,6 +61,8 @@ Arquivo no formato CSV chamado SearchResult.csv com os seguintes campos.
 -	**Texto *(texto)*:** Texto encontrado no contrato, de acordo com a busca feita.
 -	**Classificacao *(texto)*:** Rótulo do texto encontrado. Os rótulos são correspondentes às opções dadas na coluna Labels de Query.
 -	**Score *(inteiro)*:** Grau de confiança do modelo de que o texto encontrado pertence à respectiva classe. Quanto mais próximo de 1 o score, maior o grau de confiança neste resultado.
+-	**Tipo *(texto)*:** Qual tipo de busca retornou este resultado.
+
 
 ## Preço
 Esta solução tem seu preço atrelado ao número de páginas processadas. A utilização da GPU para a execução do modelo também tem impacto no aumento preço.
