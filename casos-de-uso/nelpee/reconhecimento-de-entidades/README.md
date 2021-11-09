@@ -1,2 +1,2 @@
-# Reconhecimento de Entidades
+# NamedEntityRecognition
 
