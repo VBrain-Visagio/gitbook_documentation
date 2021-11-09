@@ -32,6 +32,12 @@
     * [Notebooks](casos-de-uso/nelpee/palavras-mais-citadas/notebooks.md)
   * [Classificador de Comentários](casos-de-uso/nelpee/classificador-de-comentarios/README.md)
     * [Notebooks](casos-de-uso/nelpee/classificador-de-comentarios/notebooks.md)
+  * [Speech to Text](casos-de-uso/nelpee/speech-to-text/README.md)
+    * [Notebooks](casos-de-uso/nelpee/speech-to-text/notebooks.md)
+  * [Análise de Sentimentos](casos-de-uso/nelpee/analise-de-sentimentos/README.md)
+    * [Notebooks](casos-de-uso/nelpee/analise-de-sentimentos/notebooks.md)
+  * [Reconhecimento de Entidades](casos-de-uso/nelpee/reconhecimento-de-entidades/README.md)
+    * [Notebooks](casos-de-uso/nelpee/reconhecimento-de-entidades/notebooks.md)
 * [Recomendação de Produtos](casos-de-uso/recomendacao-de-produtos/README.md)
   * [Notebooks](casos-de-uso/recomendacao-de-produtos/notebooks.md)
 * [Ressuprimento Automático](casos-de-uso/catalogo-de-aplicacoes/README.md)
@@ -44,4 +50,3 @@
   * [Notebooks](casos-de-uso/roteirizacao-de-forca-de-campo/notebooks.md)
 * [Otimização de Estoques](casos-de-uso/otimizacao-de-estoques/README.md)
   * [Notebooks](casos-de-uso/otimizacao-de-estoques/notebooks.md)
-

@@ -4,56 +4,56 @@ description: Documentação de todos os endpoints para manipulação de reposit�
 
 # Endpoints
 
-{% api-method method="get" host="https://vbrain.visagio.com" path="/api/v1/repository" %}
-{% api-method-summary %}
-Obter Repositórios
-{% endapi-method-summary %}
+{% swagger baseUrl="https://vbrain.visagio.com" path="/api/v1/repository" method="get" summary="Obter Repositórios" %}
+{% swagger-description %}
+_Endpoint_
 
-{% api-method-description %}
-_Endpoint_ que retorna uma lista de **Repositórios** para o **Client** atual**.**
-{% endapi-method-description %}
+ que retorna uma lista de 
 
-{% api-method-spec %}
-{% api-method-request %}
-{% api-method-headers %}
-{% api-method-parameter name="username" type="string" required=true %}
+**Repositórios**
+
+ para o 
+
+**Client**
+
+ atual**.**
+{% endswagger-description %}
+
+{% swagger-parameter name="username" type="string" required="true" in="header" %}
 Usuário utilizando a API
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="organization\_id" type="string" required=true %}
-Nome da **Organização**
-{% endapi-method-parameter %}
+{% swagger-parameter name="organization:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="application\_id" type="string" required=true %}
-Nome da **Aplicação**
-{% endapi-method-parameter %}
+**Organização**
+{% endswagger-parameter %}
 
-{% api-method-parameter name="client\_id" type="string" required=true %}
-Nome do **Client**
-{% endapi-method-parameter %}
+{% swagger-parameter name="application:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="x-api-key" type="string" required=true %}
-API-Key gerada 
-{% endapi-method-parameter %}
-{% endapi-method-headers %}
+**Aplicação**
+{% endswagger-parameter %}
 
-{% api-method-query-parameters %}
-{% api-method-parameter name="from\_date" type="string" %}
-Data mínima para pesquisar \(Formato: AAAAMMDDHHMM\)
-{% endapi-method-parameter %}
+{% swagger-parameter name="client:id" type="string" required="true" in="header" %}
+Nome do 
 
-{% api-method-parameter name="to\_date" type="string" %}
-Data máxima para pesquisar \(Formato: AAAAMMDDHHMM\)
-{% endapi-method-parameter %}
-{% endapi-method-query-parameters %}
-{% endapi-method-request %}
+**Client**
+{% endswagger-parameter %}
 
-{% api-method-response %}
-{% api-method-response-example httpCode=200 %}
-{% api-method-response-example-description %}
-Lista de **repositórios** para a chave {_organization\_id, application\_id, client\_id_}
-{% endapi-method-response-example-description %}
+{% swagger-parameter name="x-api-key" type="string" required="true" in="header" %}
+API-Key gerada
+{% endswagger-parameter %}
 
+{% swagger-parameter name="from:date" type="string" in="query" %}
+Data mínima para pesquisar (Formato: AAAAMMDDHHMM)
+{% endswagger-parameter %}
+
+{% swagger-parameter name="to:date" type="string" in="query" %}
+Data máxima para pesquisar (Formato: AAAAMMDDHHMM)
+{% endswagger-parameter %}
+
+{% swagger-response status="200" description="" %}
 ```
 [
   "202011232005725016",
@@ -61,147 +61,139 @@ Lista de **repositórios** para a chave {_organization\_id, application\_id, cli
   "202011232005497236"
 ]
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=400 %}
-{% api-method-response-example-description %}
-Informações do _header_ faltantes ou parâmetros de _query_ malformados
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="400" description="" %}
 ```
 {
   "error": "Missing organization_id"
 }
 ```
-{% endapi-method-response-example %}
-{% endapi-method-response %}
-{% endapi-method-spec %}
-{% endapi-method %}
+{% endswagger-response %}
+{% endswagger %}
 
-{% api-method method="post" host="https://vbrain.visagio.com" path="/api/v1/repository" %}
-{% api-method-summary %}
-Criar Repositórios
-{% endapi-method-summary %}
+{% swagger baseUrl="https://vbrain.visagio.com" path="/api/v1/repository" method="post" summary="Criar Repositórios" %}
+{% swagger-description %}
+_Endpoint_
 
-{% api-method-description %}
-_Endpoint_ que cria um novo **Repositório** para o **Client** atual**.**
-{% endapi-method-description %}
+ que cria um novo 
 
-{% api-method-spec %}
-{% api-method-request %}
-{% api-method-headers %}
-{% api-method-parameter name="username" type="string" required=true %}
+**Repositório**
+
+ para o 
+
+**Client**
+
+ atual**.**
+{% endswagger-description %}
+
+{% swagger-parameter name="username" type="string" required="true" in="header" %}
 Usuário utilizando a API
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="organization\_id" type="string" required=true %}
-Nome da **Organização**
-{% endapi-method-parameter %}
+{% swagger-parameter name="organization:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="application\_id" type="string" required=true %}
-Nome da **Aplicação**
-{% endapi-method-parameter %}
+**Organização**
+{% endswagger-parameter %}
 
-{% api-method-parameter name="client\_id" type="string" required=true %}
-Nome do **Client**
-{% endapi-method-parameter %}
+{% swagger-parameter name="application:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="x-api-key" type="string" required=true %}
-API-Key gerada 
-{% endapi-method-parameter %}
-{% endapi-method-headers %}
+**Aplicação**
+{% endswagger-parameter %}
 
-{% api-method-form-data-parameters %}
-{% api-method-parameter name="file" type="object" required=false %}
-ZIP contendo todos os dados de entrada ou um   
+{% swagger-parameter name="client:id" type="string" required="true" in="header" %}
+Nome do 
+
+**Client**
+{% endswagger-parameter %}
+
+{% swagger-parameter name="x-api-key" type="string" required="true" in="header" %}
+API-Key gerada
+{% endswagger-parameter %}
+
+{% swagger-parameter name="file" type="object" required="false" in="body" %}
+ZIP contendo todos os dados de entrada ou um
+
+\
+
+
 arquivo do tipo .csv, .xlsx ou .json
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="params" type="object" required=false %}
+{% swagger-parameter name="params" type="object" required="false" in="body" %}
 Json contendo os parâmetros comuns do repositório
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="metadata" type="object" required=false %}
+{% swagger-parameter name="metadata" type="object" required="false" in="body" %}
 Json contendo os metadados do repositório
-{% endapi-method-parameter %}
-{% endapi-method-form-data-parameters %}
-{% endapi-method-request %}
+{% endswagger-parameter %}
 
-{% api-method-response %}
-{% api-method-response-example httpCode=201 %}
-{% api-method-response-example-description %}
-Informações sobre o **repositório** criado
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="201" description="" %}
 ```
 {
   "message": "Repository created successfully",
   "repository_id": "202009231629398695"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=400 %}
-{% api-method-response-example-description %}
-Informações do _header_ faltantes
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="400" description="" %}
 ```
 {
   "error": "Missing organization_id"
 }
 ```
-{% endapi-method-response-example %}
-{% endapi-method-response %}
-{% endapi-method-spec %}
-{% endapi-method %}
+{% endswagger-response %}
+{% endswagger %}
 
-{% api-method method="get" host="https://vbrain.visagio.com" path="/api/v1/repository/:repository\_id" %}
-{% api-method-summary %}
-Obter informações de um Repositório
-{% endapi-method-summary %}
+{% swagger baseUrl="https://vbrain.visagio.com" path="/api/v1/repository/:repository:id" method="get" summary="Obter informações de um Repositório" %}
+{% swagger-description %}
+_Endpoint_
 
-{% api-method-description %}
-_Endpoint_ que retorna informações detalhadas de um **Repositório** específico**.**
-{% endapi-method-description %}
+ que retorna informações detalhadas de um 
 
-{% api-method-spec %}
-{% api-method-request %}
-{% api-method-path-parameters %}
-{% api-method-parameter name="repository\_id" type="string" required=true %}
-Id do **Repositório** criado anteriormente
-{% endapi-method-parameter %}
-{% endapi-method-path-parameters %}
+**Repositório**
 
-{% api-method-headers %}
-{% api-method-parameter name="username" type="string" required=true %}
+ específico**.**
+{% endswagger-description %}
+
+{% swagger-parameter name="repository:id" type="string" required="true" in="path" %}
+Id do 
+
+**Repositório**
+
+ criado anteriormente
+{% endswagger-parameter %}
+
+{% swagger-parameter name="username" type="string" required="true" in="header" %}
 Usuário utilizando a API
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="organization\_id" type="string" required=true %}
-Nome da **Organização**
-{% endapi-method-parameter %}
+{% swagger-parameter name="organization:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="application\_id" type="string" required=true %}
-Nome da **Aplicação**
-{% endapi-method-parameter %}
+**Organização**
+{% endswagger-parameter %}
 
-{% api-method-parameter name="client\_id" type="string" required=true %}
-Nome do **Client**
-{% endapi-method-parameter %}
+{% swagger-parameter name="application:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="x-api-key" type="string" required=true %}
-API-Key gerada 
-{% endapi-method-parameter %}
-{% endapi-method-headers %}
-{% endapi-method-request %}
+**Aplicação**
+{% endswagger-parameter %}
 
-{% api-method-response %}
-{% api-method-response-example httpCode=200 %}
-{% api-method-response-example-description %}
-Informações detalhadas do **Repositório**
-{% endapi-method-response-example-description %}
+{% swagger-parameter name="client:id" type="string" required="true" in="header" %}
+Nome do 
 
+**Client**
+{% endswagger-parameter %}
+
+{% swagger-parameter name="x-api-key" type="string" required="true" in="header" %}
+API-Key gerada
+{% endswagger-parameter %}
+
+{% swagger-response status="200" description="" %}
 ```
 {
   "repository_id": "202009231629398695",
@@ -224,251 +216,227 @@ Informações detalhadas do **Repositório**
   }
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=400 %}
-{% api-method-response-example-description %}
-Informações do _header_ faltantes
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="400" description="" %}
 ```
 {
   "error": "Missing organization_id"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=404 %}
-{% api-method-response-example-description %}
-O id do **Repositório** não existe
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="404" description="" %}
 ```
 {
   "error": "Invalid repository_id"
 }
 ```
-{% endapi-method-response-example %}
-{% endapi-method-response %}
-{% endapi-method-spec %}
-{% endapi-method %}
+{% endswagger-response %}
+{% endswagger %}
 
-{% api-method method="delete" host="https://vbrain.visagio.com" path="/api/v1/repository/:repository\_id" %}
-{% api-method-summary %}
-Excluir um Repositório
-{% endapi-method-summary %}
+{% swagger baseUrl="https://vbrain.visagio.com" path="/api/v1/repository/:repository:id" method="delete" summary="Excluir um Repositório" %}
+{% swagger-description %}
+_Endpoint_
 
-{% api-method-description %}
-_Endpoint_ que exclui um **Repositório** específico e todas as suas **Execuções.**
-{% endapi-method-description %}
+ que exclui um 
 
-{% api-method-spec %}
-{% api-method-request %}
-{% api-method-path-parameters %}
-{% api-method-parameter name="repository\_id" type="string" required=true %}
-Id do **Repositório** criado anteriormente
-{% endapi-method-parameter %}
-{% endapi-method-path-parameters %}
+**Repositório**
 
-{% api-method-headers %}
-{% api-method-parameter name="username" type="string" required=true %}
+ específico e todas as suas 
+
+**Execuções.**
+{% endswagger-description %}
+
+{% swagger-parameter name="repository:id" type="string" required="true" in="path" %}
+Id do 
+
+**Repositório**
+
+ criado anteriormente
+{% endswagger-parameter %}
+
+{% swagger-parameter name="username" type="string" required="true" in="header" %}
 Usuário utilizando a API
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="organization\_id" type="string" required=true %}
-Nome da **Organização**
-{% endapi-method-parameter %}
+{% swagger-parameter name="organization:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="application\_id" type="string" required=true %}
-Nome da **Aplicação**
-{% endapi-method-parameter %}
+**Organização**
+{% endswagger-parameter %}
 
-{% api-method-parameter name="client\_id" type="string" required=true %}
-Nome do **Client**
-{% endapi-method-parameter %}
+{% swagger-parameter name="application:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="x-api-key" type="string" required=true %}
-API-Key gerada 
-{% endapi-method-parameter %}
-{% endapi-method-headers %}
-{% endapi-method-request %}
+**Aplicação**
+{% endswagger-parameter %}
 
-{% api-method-response %}
-{% api-method-response-example httpCode=200 %}
-{% api-method-response-example-description %}
-Mensagem de sucesso
-{% endapi-method-response-example-description %}
+{% swagger-parameter name="client:id" type="string" required="true" in="header" %}
+Nome do 
 
+**Client**
+{% endswagger-parameter %}
+
+{% swagger-parameter name="x-api-key" type="string" required="true" in="header" %}
+API-Key gerada
+{% endswagger-parameter %}
+
+{% swagger-response status="200" description="" %}
 ```
 {
   "message": "Repository and jobs deleted"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=400 %}
-{% api-method-response-example-description %}
-Informações do _header_ faltantes
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="400" description="" %}
 ```
 {
   "error": "Missing application_id"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=404 %}
-{% api-method-response-example-description %}
-O id do **Repositório** não existe
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="404" description="" %}
 ```
 {
   "error": "Invalid repository_id"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=500 %}
-{% api-method-response-example-description %}
-Erro ao excluir o **Repositório**
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="500" description="" %}
 ```
 {
   "error": "Error deleting repository folder"
 }
 ```
-{% endapi-method-response-example %}
-{% endapi-method-response %}
-{% endapi-method-spec %}
-{% endapi-method %}
+{% endswagger-response %}
+{% endswagger %}
 
-{% api-method method="get" host="https://vbrain.visagio.com" path="/api/v1/repository/:repository\_id/input" %}
-{% api-method-summary %}
-Baixar input de um Repositório
-{% endapi-method-summary %}
+{% swagger baseUrl="https://vbrain.visagio.com" path="/api/v1/repository/:repository:id/input" method="get" summary="Baixar input de um Repositório" %}
+{% swagger-description %}
+_Endpoint_
 
-{% api-method-description %}
-_Endpoint_ que retorna a pasta de _input_ de um **Repositório** específico**.**
-{% endapi-method-description %}
+ que retorna a pasta de 
 
-{% api-method-spec %}
-{% api-method-request %}
-{% api-method-path-parameters %}
-{% api-method-parameter name="repository\_id" type="string" required=true %}
-Id do **Repositório** criado anteriormente
-{% endapi-method-parameter %}
-{% endapi-method-path-parameters %}
+_input_
 
-{% api-method-headers %}
-{% api-method-parameter name="username" type="string" required=true %}
+ de um 
+
+**Repositório**
+
+ específico**.**
+{% endswagger-description %}
+
+{% swagger-parameter name="repository:id" type="string" required="true" in="path" %}
+Id do 
+
+**Repositório**
+
+ criado anteriormente
+{% endswagger-parameter %}
+
+{% swagger-parameter name="username" type="string" required="true" in="header" %}
 Usuário utilizando a API
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="organization\_id" type="string" required=true %}
-Nome da **Organização**
-{% endapi-method-parameter %}
+{% swagger-parameter name="organization:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="application\_id" type="string" required=true %}
-Nome da **Aplicação**
-{% endapi-method-parameter %}
+**Organização**
+{% endswagger-parameter %}
 
-{% api-method-parameter name="client\_id" type="string" required=true %}
-Nome do **Client**
-{% endapi-method-parameter %}
+{% swagger-parameter name="application:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="x-api-key" type="string" required=true %}
-API-Key gerada 
-{% endapi-method-parameter %}
-{% endapi-method-headers %}
-{% endapi-method-request %}
+**Aplicação**
+{% endswagger-parameter %}
 
-{% api-method-response %}
-{% api-method-response-example httpCode=200 %}
-{% api-method-response-example-description %}
-Binário do zip da pasta de _input_ do **Repositório**
-{% endapi-method-response-example-description %}
+{% swagger-parameter name="client:id" type="string" required="true" in="header" %}
+Nome do 
 
+**Client**
+{% endswagger-parameter %}
+
+{% swagger-parameter name="x-api-key" type="string" required="true" in="header" %}
+API-Key gerada
+{% endswagger-parameter %}
+
+{% swagger-response status="200" description="" %}
 ```
 <binário do zip>
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=400 %}
-{% api-method-response-example-description %}
-Informações do _header_ faltantes
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="400" description="" %}
 ```
 {
   "error": "Missing organization_id"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=404 %}
-{% api-method-response-example-description %}
-O id do **Repositório** não existe
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="404" description="" %}
 ```
 {
   "error": "Invalid repository_id"
 }
 ```
-{% endapi-method-response-example %}
-{% endapi-method-response %}
-{% endapi-method-spec %}
-{% endapi-method %}
+{% endswagger-response %}
+{% endswagger %}
 
-{% api-method method="get" host="https://vbrain.visagio.com" path="/api/v1/repository/:repository\_id/params" %}
-{% api-method-summary %}
-Obter parâmetros de um Repositório
-{% endapi-method-summary %}
+{% swagger baseUrl="https://vbrain.visagio.com" path="/api/v1/repository/:repository:id/params" method="get" summary="Obter parâmetros de um Repositório" %}
+{% swagger-description %}
+_Endpoint_
 
-{% api-method-description %}
-_Endpoint_ que retorna o _json_ dos parâmetros de um **Repositório** específico**.**
-{% endapi-method-description %}
+ que retorna o 
 
-{% api-method-spec %}
-{% api-method-request %}
-{% api-method-path-parameters %}
-{% api-method-parameter name="repository\_id" type="string" required=true %}
-Id do **Repositório** criado anteriormente
-{% endapi-method-parameter %}
-{% endapi-method-path-parameters %}
+_json_
 
-{% api-method-headers %}
-{% api-method-parameter name="username" type="string" required=true %}
+ dos parâmetros de um 
+
+**Repositório**
+
+ específico**.**
+{% endswagger-description %}
+
+{% swagger-parameter name="repository:id" type="string" required="true" in="path" %}
+Id do 
+
+**Repositório**
+
+ criado anteriormente
+{% endswagger-parameter %}
+
+{% swagger-parameter name="username" type="string" required="true" in="header" %}
 Usuário utilizando a API
-{% endapi-method-parameter %}
+{% endswagger-parameter %}
 
-{% api-method-parameter name="organization\_id" type="string" required=true %}
-Nome da **Organização**
-{% endapi-method-parameter %}
+{% swagger-parameter name="organization:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="application\_id" type="string" required=true %}
-Nome da **Aplicação**
-{% endapi-method-parameter %}
+**Organização**
+{% endswagger-parameter %}
 
-{% api-method-parameter name="client\_id" type="string" required=true %}
-Nome do **Client**
-{% endapi-method-parameter %}
+{% swagger-parameter name="application:id" type="string" required="true" in="header" %}
+Nome da 
 
-{% api-method-parameter name="x-api-key" type="string" required=true %}
-API-Key gerada 
-{% endapi-method-parameter %}
-{% endapi-method-headers %}
-{% endapi-method-request %}
+**Aplicação**
+{% endswagger-parameter %}
 
-{% api-method-response %}
-{% api-method-response-example httpCode=200 %}
-{% api-method-response-example-description %}
-_Json_ do arquivo de parâmetros do **Repositório**
-{% endapi-method-response-example-description %}
+{% swagger-parameter name="client:id" type="string" required="true" in="header" %}
+Nome do 
 
+**Client**
+{% endswagger-parameter %}
+
+{% swagger-parameter name="x-api-key" type="string" required="true" in="header" %}
+API-Key gerada
+{% endswagger-parameter %}
+
+{% swagger-response status="200" description="" %}
 ```
 {
   "a": 10,
@@ -476,32 +444,21 @@ _Json_ do arquivo de parâmetros do **Repositório**
   "hyperparam": "Hyperparam_Example"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=400 %}
-{% api-method-response-example-description %}
-Informações do _header_ faltantes
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="400" description="" %}
 ```
 {
   "error": "Missing organization_id"
 }
 ```
-{% endapi-method-response-example %}
+{% endswagger-response %}
 
-{% api-method-response-example httpCode=404 %}
-{% api-method-response-example-description %}
-O id do **Repositório** não existe
-{% endapi-method-response-example-description %}
-
+{% swagger-response status="404" description="" %}
 ```
 {
   "error": "Invalid repository_id"
 }
 ```
-{% endapi-method-response-example %}
-{% endapi-method-response %}
-{% endapi-method-spec %}
-{% endapi-method %}
-
+{% endswagger-response %}
+{% endswagger %}

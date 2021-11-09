@@ -16,15 +16,16 @@ O primeiro conceito para entender a utilização do VBrain é a sua estrutura b�
 
 1. **Organization\_id:** O nome da empresa que está utilizando a plataforma
 2. **Application\_id:** O nome da aplicação que está sendo utilizada
-3. **Client\_id:** O nome do "projeto" 
+3. **Client\_id:** O nome do "projeto"
 
 Tal divisão existe para garantir que em uma mesma **Organização** diversas áreas possam utilizar uma mesma **Aplicação** de forma independente, como pode ser visto a seguir:
 
-|  | **Organization 1** | **Organization 2** | **Organization N** |
-| :--- | :---: | :---: | :---: |
-| **Application 1** | _Client 1, Client 2_ |  | _Client 5_ |
-| **Application 2** | _Client 4_ | _Client 3_ |  |
-| **Application N** | _Client N_ |  |  |
+|                   |                      |                    |                    |
+| ----------------- | :------------------: | :----------------: | :----------------: |
+|                   |  **Organization 1**  | **Organization 2** | **Organization N** |
+| **Application 1** | _Client 1, Client 2_ |                    |     _Client 5_     |
+| **Application 2** |      _Client 4_      |     _Client 3_     |                    |
+| **Application N** |      _Client N_      |                    |                    |
 
 No caso acima, _Organization 1_ tem dois clients para a _Application 1_, o _Client 1_ e o _Client 2_. Uma forma de entender melhor a situação é imaginar o exemplo de uma empresa de telefonia:
 
@@ -37,7 +38,9 @@ A existência de **clients** permite que múltiplas áreas ou times de uma mesma
 
 Esse conceitos são explicados em maior detalhe na seção:
 
-{% page-ref page="../../conceitos-principais/estrutura-basica/" %}
+{% content-ref url="../../conceitos-principais/estrutura-basica/" %}
+[estrutura-basica](../../conceitos-principais/estrutura-basica/)
+{% endcontent-ref %}
 
 ### Repositórios
 
@@ -45,7 +48,9 @@ O **Repositório** é essencialmente uma pasta onde são salvos os arquivos de _
 
 Esse conceitos são explicados em maior detalhe na seção:
 
-{% page-ref page="../../conceitos-principais/repositorios/" %}
+{% content-ref url="../../conceitos-principais/repositorios/" %}
+[repositorios](../../conceitos-principais/repositorios/)
+{% endcontent-ref %}
 
 ### Execuções
 
@@ -55,9 +60,11 @@ Um **Repositório** pode ser utilizado por múltiplas **Execuções**, reutiliza
 
 Esse conceitos são explicados em maior detalhe na seção:
 
-{% page-ref page="../../conceitos-principais/execucoes/" %}
+{% content-ref url="../../conceitos-principais/execucoes/" %}
+[execucoes](../../conceitos-principais/execucoes/)
+{% endcontent-ref %}
 
-## 💪 Mãos à Obra! 
+## 💪 Mãos à Obra!
 
 Na próxima página iremos colocar os conhecimentos adquiridos em prática e executar nossa primeira aplicação!
 
@@ -65,8 +72,8 @@ As informações necessárias para utilização da plataforma são as seguintes:
 
 1. **Organization\_id:** O nome da empresa que está utilizando a plataforma
 2. **Application\_id:** O nome da aplicação que está sendo utilizada
-3. **Client\_id:** O nome do "projeto" 
-4. **Username:** O usuário que está utilizando ****
+3. **Client\_id:** O nome do "projeto"
+4. **Username:** O usuário que está utilizando \*\*\*\*
 5. **API-Key:** Uma chave que somente você possui acesso e que dá acesso à plataforma
 
 {% hint style="warning" %}
@@ -75,5 +82,6 @@ Caso você perca a sua **API-Key** entre em contato conosco para geração de um
 
 Tendo em mãos tais informações, podemos partir para a próxima página:
 
-{% page-ref page="exemplo-de-caso-de-uso.md" %}
-
+{% content-ref url="exemplo-de-caso-de-uso.md" %}
+[exemplo-de-caso-de-uso.md](exemplo-de-caso-de-uso.md)
+{% endcontent-ref %}
