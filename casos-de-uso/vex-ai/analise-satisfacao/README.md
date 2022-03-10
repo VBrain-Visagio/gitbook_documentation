@@ -34,8 +34,8 @@ Esta planilha deve possuir os seguintes campos.
 
 #### Opcionais
 -	**sentence-transformer *(string)*:** Indica qual o modelo de sentence-transformer que será utilizado para a criação dos embeddings. Esses embeddings serão utilizados como features para o modelo de regressão logística
--	**log_regr_solver *(string)*:** Parâmetro para definir qual o solver utilizado pela regressão logística. Como padrão é utilizado o liblinear. Para mais infos, (<a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">consulte o site do scikit-learn através desse link.</a>)
--	**log_regr_loss *(string)*:** Parâmetro para definir qual o algoritmo de regularização que será utilizado no treinamento da regressão logística. Como padrão é utilizado "l2" (Ridge Regression). Para mais infos, (<a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">consulte o site do scikit-learn através desse link.</a>)
+-	**log_regr_solver *(string)*:** Parâmetro para definir qual o solver utilizado pela regressão logística. Como padrão é utilizado o liblinear. Para mais infos, <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">consulte o site do scikit-learn através desse link.</a>
+-	**log_regr_loss *(string)*:** Parâmetro para definir qual o algoritmo de regularização que será utilizado no treinamento da regressão logística. Como padrão é utilizado "l2" (Ridge Regression). Para mais infos, <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html">consulte o site do scikit-learn através desse link.</a>
 
 
 ## Outputs
