@@ -39,7 +39,7 @@ Esta planilha deve possuir os seguintes campos.
 -	**model *(string)*:** Este parâmetro indica qual o tipo de modelo zero-shot que será utilizado na classificação do texto. Como padrão, o modelo DistilBart-MNLI é utilizado. Outros modelos podem ser encontrados em "https://huggingface.co/valhalla/distilbart-mnli-12-9"
 -	**threshold *(inteiro)*:** Este parâmetro indica qual o score mínimo necessário para considerar uma label válida. Como padrão, ela é setada em 0.1
 -	**most_relevant_label *(booleana)*:** Este parâmetro indica o resultado será exibido trazendo apenas a label mais relevante para cada comentário (most_relevant_label = true) ou se trará todas as labels que tiveram um score acima do threshold definido (most_relevant_label = false). Como padrão, ela é setada como "true".
-
+-	**hypothesis_template *(string)*:** Este parâmetro permite mudar o template utilizado na construção da sequência que será utilizada no modelo de NLI. A junção entre o comentário e a sequência criada será utilizada para confirmar hipótese de vinculação entre o rótulo e o comentário.
 
 ## Outputs
 Como saída, a solução retorna a base Labeled Comments com os comentários categorizados. 
