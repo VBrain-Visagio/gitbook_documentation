@@ -1,0 +1,138 @@
+Dataprep steps
+==============
+
+Assertion
+---------
+
+Aws cost alert
+--------------
+
+Dailysales transformer
+----------------------
+
+Dataset filter
+--------------
+
+Data prep transformer
+---------------------
+
+Data processor
+--------------
+
+Data reader
+-----------
+
+Date features extractor
+-----------------------
+
+Feature encoder
+---------------
+
+Fill absent dates
+-----------------
+
+Forward looking tranformer
+--------------------------
+
+asdasdasdasdkasdkjadkhakshdkjadhaksjhakjsdhakjshdkjash
+
+Holidays
+--------
+
+Class that puts holidays columns in your model object.
+
+city (str)
+:   The city that you want to get the holidays
+
+state (str)
+:   The state that you want to get the holidays
+
+holiday\_types (str or list)
+:   
+
+> Type of holiday
+>
+> optional
+> :   Insert optional holidays such as Teacher's Day in Brazil
+>
+> holiday
+> :   Insert not optional holidays such as Christmas
+>
+> special
+> :   Insert special days such as Mother's Day or Black Friday
+>
+coverage (str or list)
+:   The coverage of the holiday: *'national'*, *'state'*, *'municipal'*
+
+column\_by\_type (bool)
+:   If true, for each holiday type will get a column in the datarame,
+    that is, the models will treat them as different variables
+
+eve\_column (bool)
+:   If true, an *'eve\_'* + {holiday\_type} will be concatenated in the
+    dataframe
+
+days\_of\_week\_to\_drop (list)
+:   A list of days of week that you don't want to consider the holidays
+    in that days.
+
+holidays\_to\_drop (list)
+:   A list of holidays that you don't want to consider
+
+``` {.sourceCode .python}
+{ # on dataprep_config, use the parameters above
+
+    "featurization":{
+        "holidays"{
+            city :  'rio de janeiro'            
+            state : 'RJ'                        
+            holiday_types : ['special', 'holiday']            
+            coverage : ['municipal', 'national']                    
+            column_by_type : true               
+            eve_column : true                       
+            days_of_week_to_drop : ['monday', 'sunday']
+            holidays_to_drop : ['Natal']
+        }
+    }
+
+}
+```
+
+Lag feature transformer
+-----------------------
+
+Merge features
+--------------
+
+Merge geolocation
+-----------------
+
+Metadata transformer
+--------------------
+
+Missing values transformer
+--------------------------
+
+Prepare related transformer
+---------------------------
+
+Prepare supervised transformer
+------------------------------
+
+Rolling window tranformer
+-------------------------
+
+Scaler
+------
+
+Stockout transformer
+--------------------
+
+Time to chistmas transformer
+----------------------------
+
+Time to transformer
+-------------------
+
+Working day
+-----------

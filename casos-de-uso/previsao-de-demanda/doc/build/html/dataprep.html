@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataprep steps &mdash; Forecast 1.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Model steps" href="models.html" />
+    <link rel="prev" title="Welcome to Forecast’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dataprep steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.assertion">Assertion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aws-cost-alert">Aws cost alert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.dailysales_transformer">Dailysales transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.dataset_filter">Dataset filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-prep-transformer">Data prep transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-processor">Data processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-reader">Data reader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.date_features_extractor">Date features extractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.feature_encoder">Feature encoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.fill_absent_dates">Fill absent dates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.forward_looking_tranformer">Forward looking tranformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#holidays">Holidays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.lag_feature_transformer">Lag feature transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.merge_features">Merge features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.merge_geolocation">Merge geolocation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.metadata_transformer">Metadata transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.missing_values_transformer">Missing values transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.prepare_related_transformer">Prepare related transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.prepare_supervised_transformer">Prepare supervised transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.rolling_window_tranformer">Rolling window tranformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.scaler">Scaler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.stockout_transformer">Stockout transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.time_to_chistmas_transformer">Time to chistmas transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.time_to_transformer">Time to transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.dataprep.working_day">Working day</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Output steps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Dataprep steps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dataprep.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="dataprep-steps">
+<h1>Dataprep steps<a class="headerlink" href="#dataprep-steps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-vpipe.steps.dataprep.assertion">
+<span id="assertion"></span><h2>Assertion<a class="headerlink" href="#module-vpipe.steps.dataprep.assertion" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.assertion.Assertion">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.assertion.</code><code class="sig-name descname">Assertion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/assertion.html#Assertion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.assertion.Assertion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="aws-cost-alert">
+<h2>Aws cost alert<a class="headerlink" href="#aws-cost-alert" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.dailysales_transformer">
+<span id="dailysales-transformer"></span><h2>Dailysales transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.dailysales_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.dailysales_transformer.DailySalesTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.dailysales_transformer.</code><code class="sig-name descname">DailySalesTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/dailysales_transformer.html#DailySalesTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.dailysales_transformer.DailySalesTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.dataset_filter">
+<span id="dataset-filter"></span><h2>Dataset filter<a class="headerlink" href="#module-vpipe.steps.dataprep.dataset_filter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.dataset_filter.DataFilter">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.dataset_filter.</code><code class="sig-name descname">DataFilter</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/dataset_filter.html#DataFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.dataset_filter.DataFilter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="data-prep-transformer">
+<h2>Data prep transformer<a class="headerlink" href="#data-prep-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="data-processor">
+<h2>Data processor<a class="headerlink" href="#data-processor" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="data-reader">
+<h2>Data reader<a class="headerlink" href="#data-reader" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.date_features_extractor">
+<span id="date-features-extractor"></span><h2>Date features extractor<a class="headerlink" href="#module-vpipe.steps.dataprep.date_features_extractor" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.date_features_extractor.DateFeaturesExtractor">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.date_features_extractor.</code><code class="sig-name descname">DateFeaturesExtractor</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/date_features_extractor.html#DateFeaturesExtractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.date_features_extractor.DateFeaturesExtractor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.feature_encoder">
+<span id="feature-encoder"></span><h2>Feature encoder<a class="headerlink" href="#module-vpipe.steps.dataprep.feature_encoder" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.feature_encoder.FeatureEconder">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.feature_encoder.</code><code class="sig-name descname">FeatureEconder</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/feature_encoder.html#FeatureEconder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.feature_encoder.FeatureEconder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.fill_absent_dates">
+<span id="fill-absent-dates"></span><h2>Fill absent dates<a class="headerlink" href="#module-vpipe.steps.dataprep.fill_absent_dates" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.fill_absent_dates.FillAbsentDates">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.fill_absent_dates.</code><code class="sig-name descname">FillAbsentDates</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/fill_absent_dates.html#FillAbsentDates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.fill_absent_dates.FillAbsentDates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.forward_looking_tranformer">
+<span id="forward-looking-tranformer"></span><h2>Forward looking tranformer<a class="headerlink" href="#module-vpipe.steps.dataprep.forward_looking_tranformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.forward_looking_tranformer.ForwardLookingTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.forward_looking_tranformer.</code><code class="sig-name descname">ForwardLookingTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/forward_looking_tranformer.html#ForwardLookingTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.forward_looking_tranformer.ForwardLookingTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="holidays">
+<h2>Holidays<a class="headerlink" href="#holidays" title="Permalink to this headline">¶</a></h2>
+<p>Class that puts holidays columns in your model object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">city (str)</dt>
+<dd class="field-odd"><p>The city that you want to get the holidays</p>
+</dd>
+<dt class="field-even">state (str)</dt>
+<dd class="field-even"><p>The state that you want to get the holidays</p>
+</dd>
+<dt class="field-odd">holiday_types (str or list)</dt>
+<dd class="field-odd"><p>Type of holiday</p>
+<dl class="field-list simple">
+<dt class="field-odd">optional</dt>
+<dd class="field-odd"><p>Insert optional holidays such as Teacher’s Day in Brazil</p>
+</dd>
+<dt class="field-even">holiday</dt>
+<dd class="field-even"><p>Insert not optional holidays such as Christmas</p>
+</dd>
+<dt class="field-odd">special</dt>
+<dd class="field-odd"><p>Insert special days such as Mother’s Day or Black Friday</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">coverage (str or list)</dt>
+<dd class="field-even"><p>The coverage of the holiday: <em>‘national’</em>, <em>‘state’</em>, <em>‘municipal’</em></p>
+</dd>
+<dt class="field-odd">column_by_type (bool)</dt>
+<dd class="field-odd"><p>If true, for each holiday type will get a column in the datarame, that is, the models will treat them as different variables</p>
+</dd>
+<dt class="field-even">eve_column (bool)</dt>
+<dd class="field-even"><p>If true, an <em>‘eve_’</em> + {holiday_type} will be concatenated in the dataframe</p>
+</dd>
+<dt class="field-odd">days_of_week_to_drop (list)</dt>
+<dd class="field-odd"><p>A list of days of week that you don’t want to consider the holidays in that days.</p>
+</dd>
+<dt class="field-even">holidays_to_drop (list)</dt>
+<dd class="field-even"><p>A list of holidays that you don’t want to consider</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="c1"># on dataprep_config, use the parameters above</span>
+
+    <span class="s2">&quot;featurization&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;holidays&quot;</span><span class="p">{</span>
+            <span class="n">city</span> <span class="p">:</span>  <span class="s1">&#39;rio de janeiro&#39;</span>
+            <span class="n">state</span> <span class="p">:</span> <span class="s1">&#39;RJ&#39;</span>
+            <span class="n">holiday_types</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;special&#39;</span><span class="p">,</span> <span class="s1">&#39;holiday&#39;</span><span class="p">]</span>
+            <span class="n">coverage</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;municipal&#39;</span><span class="p">,</span> <span class="s1">&#39;national&#39;</span><span class="p">]</span>
+            <span class="n">column_by_type</span> <span class="p">:</span> <span class="n">true</span>
+            <span class="n">eve_column</span> <span class="p">:</span> <span class="n">true</span>
+            <span class="n">days_of_week_to_drop</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;monday&#39;</span><span class="p">,</span> <span class="s1">&#39;sunday&#39;</span><span class="p">]</span>
+            <span class="n">holidays_to_drop</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Natal&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<span class="target" id="module-vpipe.steps.dataprep.holidays"></span><dl class="py class">
+<dt id="vpipe.steps.dataprep.holidays.VHolidays">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.holidays.</code><code class="sig-name descname">VHolidays</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/holidays.html#VHolidays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.holidays.VHolidays" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="vpipe.steps.dataprep.holidays.VHolidays.create_new_yearly_holiday_df">
+<code class="sig-name descname">create_new_yearly_holiday_df</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">end</span></em>, <em class="sig-param"><span class="n">day</span></em>, <em class="sig-param"><span class="n">month</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">holiday_type</span></em>, <em class="sig-param"><span class="n">state</span><span class="o">=</span><span class="default_value">'national'</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">'national'</span></em>, <em class="sig-param"><span class="n">city</span><span class="o">=</span><span class="default_value">'national'</span></em>, <em class="sig-param"><span class="n">add_to_class</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/holidays.html#VHolidays.create_new_yearly_holiday_df"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.holidays.VHolidays.create_new_yearly_holiday_df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example function with types documented in the docstring.</p>
+<p><a class="reference external" href="https://www.python.org/dev/peps/pep-0484/">PEP 484</a> type annotations are supported. If attribute, parameter, and
+return types are annotated according to <a class="reference external" href="https://www.python.org/dev/peps/pep-0484/">PEP 484</a>, they do not need to be
+included in the docstring:</p>
+<dl class="simple">
+<dt>param1<span class="classifier">int</span></dt><dd><p>The first parameter.</p>
+</dd>
+<dt>param2<span class="classifier">str</span></dt><dd><p>The second parameter.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if successful, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.dataprep.holidays.VHolidays.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/holidays.html#VHolidays.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.holidays.VHolidays.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that gets all the necessary holidays and prepare the data to be merged in the dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>class 'Model Object'</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>self</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>class Vholidays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.dataprep.holidays.VHolidays.get_bool_holiday">
+<code class="sig-name descname">get_bool_holiday</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">end</span></em>, <em class="sig-param"><span class="n">city</span></em>, <em class="sig-param"><span class="n">state</span></em>, <em class="sig-param"><span class="n">holiday_types</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">holidays_to_drop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">days_of_week_to_drop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">column_by_type</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">eve_column</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/holidays.html#VHolidays.get_bool_holiday"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.holidays.VHolidays.get_bool_holiday" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that get one or more columns with 0s or 1s about holiday informations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>city</strong> (<em>class 'str'</em>) – The city that you want to get the holidays</p></li>
+<li><p><strong>state</strong> (<em>class 'str'</em>) – The city that you want to get the holidays</p></li>
+<li><p><strong>start</strong> – The first date of the range in which you want to get the holidays</p></li>
+<li><p><strong>end</strong> – The last date of the range in which you want to get the holidays</p></li>
+<li><p><strong>holiday_types</strong> (<em>class 'str'</em><em> or </em><em>list</em>) – Type of holiday: ‘optional’, ‘special’, ‘holiday’</p></li>
+<li><p><strong>coverage</strong> (<em>class 'str'</em><em> or </em><em>'list'</em>) – Coverage of holiday: ‘national’, ‘state’, ‘municipal’</p></li>
+<li><p><strong>holidays_to_drop</strong> (<em>class list</em>) – A list of holidays that you don’t want to consider</p></li>
+<li><p><strong>days_of_week_to_drop</strong> (<em>class list</em>) – A list of days of week that you don’t want to consider the holidays in that days.</p></li>
+<li><p><strong>column_by_type</strong> (<em>class eve_column</em>) – If true, for each holiday type will get a column in the datarame, that is, the models will treat them as different variables</p></li>
+<li><p><strong>eve_column</strong> – If true, an ‘eve’ + {holiday_type} will be concatenated in the dataframe</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dataframe with boolean columns</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.dataprep.holidays.VHolidays.get_holidays_by_city">
+<code class="sig-name descname">get_holidays_by_city</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">end</span></em>, <em class="sig-param"><span class="n">city</span></em>, <em class="sig-param"><span class="n">state</span></em>, <em class="sig-param"><span class="n">holiday_types</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">coverage</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">holidays_to_drop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">days_of_week_to_drop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/holidays.html#VHolidays.get_holidays_by_city"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.holidays.VHolidays.get_holidays_by_city" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that get the raw table of holidays with this</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>city</strong> (<em>class 'str'</em>) – The city that you want to get the holidays</p></li>
+<li><p><strong>state</strong> (<em>class 'str'</em>) – The city that you want to get the holidays</p></li>
+<li><p><strong>start</strong> – The first date of the range in which you want to get the holidays</p></li>
+<li><p><strong>end</strong> – The last date of the range in which you want to get the holidays</p></li>
+<li><p><strong>holiday_types</strong> (<em>class 'str'</em><em> or </em><em>list</em>) – Type of holiday: ‘optional’, ‘special’, ‘holiday’</p></li>
+<li><p><strong>coverage</strong> (<em>class 'str'</em><em> or </em><em>'list'</em>) – Coverage of holiday: ‘national’, ‘state’, ‘municipal’</p></li>
+<li><p><strong>holidays_to_drop</strong> (<em>class list</em>) – A list of holidays that you don’t want to consider</p></li>
+<li><p><strong>days_of_week_to_drop</strong> (<em>class list</em>) – A list of days of week that you don’t want to consider the holidays in that days.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dataframe with the holidays, with name, date, coverage and other informations about the holidays</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.dataprep.holidays.VHolidays.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/holidays.html#VHolidays.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.holidays.VHolidays.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that insert the holiday data in the Model Object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>class 'Model Object'</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>X Object with the holiday columns</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ModelObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.lag_feature_transformer">
+<span id="lag-feature-transformer"></span><h2>Lag feature transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.lag_feature_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.lag_feature_transformer.LagFeatureTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.lag_feature_transformer.</code><code class="sig-name descname">LagFeatureTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/lag_feature_transformer.html#LagFeatureTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.lag_feature_transformer.LagFeatureTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.merge_features">
+<span id="merge-features"></span><h2>Merge features<a class="headerlink" href="#module-vpipe.steps.dataprep.merge_features" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.merge_features.MergeFeatures">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.merge_features.</code><code class="sig-name descname">MergeFeatures</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/merge_features.html#MergeFeatures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.merge_features.MergeFeatures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.merge_geolocation">
+<span id="merge-geolocation"></span><h2>Merge geolocation<a class="headerlink" href="#module-vpipe.steps.dataprep.merge_geolocation" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.merge_geolocation.MergeGeolocation">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.merge_geolocation.</code><code class="sig-name descname">MergeGeolocation</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/merge_geolocation.html#MergeGeolocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.merge_geolocation.MergeGeolocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.metadata_transformer">
+<span id="metadata-transformer"></span><h2>Metadata transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.metadata_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.metadata_transformer.MetadataTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.metadata_transformer.</code><code class="sig-name descname">MetadataTransformer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/metadata_transformer.html#MetadataTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.metadata_transformer.MetadataTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.missing_values_transformer">
+<span id="missing-values-transformer"></span><h2>Missing values transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.missing_values_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.missing_values_transformer.MissingValueTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.missing_values_transformer.</code><code class="sig-name descname">MissingValueTransformer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_frequency</span><span class="o">=</span><span class="default_value">'D'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/dataprep/missing_values_transformer.html#MissingValueTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.missing_values_transformer.MissingValueTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.prepare_related_transformer">
+<span id="prepare-related-transformer"></span><h2>Prepare related transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.prepare_related_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.prepare_related_transformer.PrepareRelatedTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.prepare_related_transformer.</code><code class="sig-name descname">PrepareRelatedTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/prepare_related_transformer.html#PrepareRelatedTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.prepare_related_transformer.PrepareRelatedTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.prepare_supervised_transformer">
+<span id="prepare-supervised-transformer"></span><h2>Prepare supervised transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.prepare_supervised_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.prepare_supervised_transformer.PrepareSupervisedTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.prepare_supervised_transformer.</code><code class="sig-name descname">PrepareSupervisedTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/prepare_supervised_transformer.html#PrepareSupervisedTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.prepare_supervised_transformer.PrepareSupervisedTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.rolling_window_tranformer">
+<span id="rolling-window-tranformer"></span><h2>Rolling window tranformer<a class="headerlink" href="#module-vpipe.steps.dataprep.rolling_window_tranformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.rolling_window_tranformer.RollingWindowTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.rolling_window_tranformer.</code><code class="sig-name descname">RollingWindowTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/rolling_window_tranformer.html#RollingWindowTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.rolling_window_tranformer.RollingWindowTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.scaler">
+<span id="scaler"></span><h2>Scaler<a class="headerlink" href="#module-vpipe.steps.dataprep.scaler" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.scaler.VStandardScaler">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.scaler.</code><code class="sig-name descname">VStandardScaler</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/scaler.html#VStandardScaler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.scaler.VStandardScaler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.stockout_transformer">
+<span id="stockout-transformer"></span><h2>Stockout transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.stockout_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.stockout_transformer.StockoutTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.stockout_transformer.</code><code class="sig-name descname">StockoutTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/stockout_transformer.html#StockoutTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.stockout_transformer.StockoutTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.time_to_chistmas_transformer">
+<span id="time-to-chistmas-transformer"></span><h2>Time to chistmas transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.time_to_chistmas_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.time_to_chistmas_transformer.TimeToChristmasTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.time_to_chistmas_transformer.</code><code class="sig-name descname">TimeToChristmasTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/time_to_chistmas_transformer.html#TimeToChristmasTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.time_to_chistmas_transformer.TimeToChristmasTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.time_to_transformer">
+<span id="time-to-transformer"></span><h2>Time to transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.time_to_transformer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.time_to_transformer.TimeToTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.time_to_transformer.</code><code class="sig-name descname">TimeToTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/time_to_transformer.html#TimeToTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.time_to_transformer.TimeToTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.dataprep.working_day">
+<span id="working-day"></span><h2>Working day<a class="headerlink" href="#module-vpipe.steps.dataprep.working_day" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.dataprep.working_day.WorkingDayTransformer">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.dataprep.working_day.</code><code class="sig-name descname">WorkingDayTransformer</code><a class="reference internal" href="_modules/vpipe/steps/dataprep/working_day.html#WorkingDayTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.dataprep.working_day.WorkingDayTransformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Forecast’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="models.html" class="btn btn-neutral float-right" title="Model steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

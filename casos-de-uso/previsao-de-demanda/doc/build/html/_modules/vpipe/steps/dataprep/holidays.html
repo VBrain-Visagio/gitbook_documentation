@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.dataprep.holidays &mdash; Forecast 1.0 documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/models.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output.html">Output steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.dataprep.holidays</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.dataprep.holidays</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">unidecode</span> <span class="kn">import</span> <span class="n">unidecode</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span> <span class="nn">vpipe.utils.global_vars</span> <span class="kn">import</span> <span class="n">DATAPREP_CONFIG</span><span class="p">,</span> <span class="n">Config</span> <span class="k">as</span> <span class="n">cfg</span>
+
+
+<span class="n">holidays_path</span> <span class="o">=</span> <span class="s1">&#39;vpipe/utils/holiday_datasets/&#39;</span>
+<span class="n">national</span> <span class="o">=</span> <span class="s1">&#39;national_holidays.csv&#39;</span>
+<span class="n">regional</span> <span class="o">=</span> <span class="s1">&#39;regional_holidays_brazil.csv&#39;</span>
+<span class="n">special</span> <span class="o">=</span> <span class="s1">&#39;special_days.csv&#39;</span>
+
+<div class="viewcode-block" id="VHolidays"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.holidays.VHolidays">[docs]</a><span class="k">class</span> <span class="nc">VHolidays</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span><span class="p">):</span>
+
+
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        
+        <span class="n">national_holidays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">holidays_path</span> <span class="o">+</span> <span class="n">national</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin1&#39;</span><span class="p">)</span>
+        <span class="n">national_holidays</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">national_holidays</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        <span class="n">national_holidays</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;holiday&#39;</span>
+        <span class="n">national_holidays</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span>
+        <span class="n">national_holidays</span><span class="p">[</span><span class="s1">&#39;coverage&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">national_holidays</span> <span class="o">=</span> <span class="n">national_holidays</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">holidays_path</span> <span class="o">+</span> <span class="n">regional</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="s1">&#39;latin1&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        
+        <span class="n">special_days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">holidays_path</span> <span class="o">+</span> <span class="n">special</span><span class="p">)</span>
+        <span class="n">special_days</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">special_days</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">special_days</span> <span class="o">=</span> <span class="n">special_days</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">enabled</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">dataprep_config</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">cfg</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s1">&#39;DATAPREP_CONFIG&#39;</span><span class="p">)]</span>
+        <span class="n">featurization_param</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s1">&#39;FEATURIZATION&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">featurization_param</span> <span class="ow">in</span> <span class="n">dataprep_config</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;holidays&#39;</span> <span class="ow">in</span> <span class="n">dataprep_config</span><span class="p">[</span><span class="n">featurization_param</span><span class="p">])</span>
+
+<div class="viewcode-block" id="VHolidays.fit"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.holidays.VHolidays.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Method that gets all the necessary holidays and prepare the data to be merged in the dataset</span>
+<span class="sd">        </span>
+<span class="sd">        :param X: </span>
+<span class="sd">            object from class ModelObject</span>
+<span class="sd">        :type X:</span>
+<span class="sd">            class &#39;Model Object&#39;</span>
+<span class="sd">        :return: self</span>
+<span class="sd">        :rtype: class Vholidays</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mo</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="n">featurization_param</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s1">&#39;FEATURIZATION&#39;</span><span class="p">)</span>
+        <span class="n">holiday_config</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cfg</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s1">&#39;DATAPREP_CONFIG&#39;</span><span class="p">)][</span><span class="n">featurization_param</span><span class="p">][</span><span class="s1">&#39;holidays&#39;</span><span class="p">]</span>
+        
+
+        <span class="n">train_start</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">get_execution_config</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">train_end</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">get_execution_config</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">train_end</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        
+        <span class="n">test_start</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">train_end</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">test_end</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">train_end</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">get_hyperparams_config</span><span class="p">()[</span><span class="s1">&#39;horizon&#39;</span><span class="p">])</span>
+        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">holiday_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bool_holiday</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">train_start</span><span class="p">,</span>
+                                                <span class="n">end</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_end</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">],</span>
+                                                <span class="n">city</span> <span class="o">=</span> <span class="n">holiday_config</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">],</span>
+                                                <span class="n">state</span> <span class="o">=</span> <span class="n">holiday_config</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">],</span>
+                                                <span class="n">holiday_types</span><span class="o">=</span> <span class="n">holiday_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;holiday_types&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">),</span>
+                                                <span class="n">coverage</span><span class="o">=</span> <span class="n">holiday_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coverage&#39;</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">),</span>
+                                                <span class="n">column_by_type</span><span class="o">=</span> <span class="n">holiday_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;column_by_type&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+                                                <span class="n">eve_column</span><span class="o">=</span><span class="n">holiday_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;eve_column&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                                                <span class="n">days_of_week_to_drop</span><span class="o">=</span> <span class="n">holiday_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;days_of_week_to_drop&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                                <span class="n">holidays_to_drop</span><span class="o">=</span><span class="n">holiday_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;holidays_to_drop&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="c1"># self.holiday_df[&#39;date&#39;] = self.holiday_df.date.apply(lambda x : str(x)[0:10])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">holiday_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">holiday_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">holiday_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">holiday_df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &gt;= &#39;</span><span class="si">{</span><span class="n">train_start</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &lt;= &#39;</span><span class="si">{</span><span class="n">train_end</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">holiday_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">holiday_df</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &gt;= &#39;</span><span class="si">{</span><span class="n">test_start</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        
+        <span class="n">mo</span><span class="o">.</span><span class="n">holiday_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">holiday_test</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="VHolidays.transform"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.holidays.VHolidays.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Method that insert the holiday data in the Model Object</span>
+
+<span class="sd">        :param X:</span>
+<span class="sd">            object from class ModelObject</span>
+<span class="sd">        :type X:</span>
+<span class="sd">            class &#39;Model Object&#39;</span>
+
+<span class="sd">        :return: X Object with the holiday columns </span>
+<span class="sd">        :rtype: ModelObject</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mo</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+
+
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">],</span>
+                                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">holiday_train</span><span class="p">,</span>
+                                <span class="n">on</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span>
+                                <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">)</span>
+
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">holiday_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">holiday_test</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">holiday_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">holiday_cols</span>
+
+        <span class="k">return</span> <span class="n">mo</span>   </div>
+        
+<div class="viewcode-block" id="VHolidays.create_new_yearly_holiday_df"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.holidays.VHolidays.create_new_yearly_holiday_df">[docs]</a>    <span class="k">def</span> <span class="nf">create_new_yearly_holiday_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                                     <span class="n">start</span><span class="p">,</span> 
+                                     <span class="n">end</span><span class="p">,</span>
+                                     <span class="n">day</span><span class="p">,</span>
+                                     <span class="n">month</span><span class="p">,</span> 
+                                     <span class="n">name</span><span class="p">,</span> 
+                                     <span class="n">holiday_type</span><span class="p">,</span> 
+                                     <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span><span class="p">,</span> 
+                                     <span class="n">coverage</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span><span class="p">,</span>
+                                     <span class="n">city</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span><span class="p">,</span>
+                                     <span class="n">add_to_class</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Example function with types documented in the docstring.</span>
+
+<span class="sd">        `PEP 484`_ type annotations are supported. If attribute, parameter, and</span>
+<span class="sd">        return types are annotated according to `PEP 484`_, they do not need to be</span>
+<span class="sd">        included in the docstring:</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        param1 : int</span>
+<span class="sd">            The first parameter.</span>
+<span class="sd">        param2 : str</span>
+<span class="sd">            The second parameter.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if successful, False otherwise.</span>
+
+<span class="sd">        .. _PEP 484:</span>
+<span class="sd">            https://www.python.org/dev/peps/pep-0484/</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="n">complete_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+
+            <span class="n">single_holiday</span> <span class="o">=</span>  <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+                                <span class="s1">&#39;date&#39;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">),</span>
+                                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">holiday_type</span><span class="p">,</span>
+                                <span class="s1">&#39;city&#39;</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
+                                <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
+                                <span class="s1">&#39;coverage&#39;</span><span class="p">:</span> <span class="n">coverage</span>
+
+                            <span class="p">},</span> <span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">complete_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">complete_df</span><span class="p">,</span> <span class="n">single_holiday</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">complete_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            
+<span class="c1">#         new_holidays = pd.DataFrame()    </span>
+<span class="c1">#         new_holidays = pd.concat([new_holidays, complete_df])</span>
+        <span class="n">complete_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">complete_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">add_to_class</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="p">,</span> <span class="n">complete_df</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">complete_df</span></div>
+    
+    
+    <span class="k">def</span> <span class="nf">create_holiday_by_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                               <span class="n">name</span><span class="p">,</span>
+                               <span class="n">type_of_holiday</span><span class="p">,</span> 
+                               <span class="n">day_of_week</span><span class="p">,</span> 
+                               <span class="n">month</span><span class="p">,</span> 
+                               <span class="n">year</span><span class="p">,</span>
+                               <span class="n">order_in_month</span><span class="p">,</span>
+                               <span class="n">forward</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                               <span class="n">city</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span><span class="p">,</span>
+                               <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span><span class="p">,</span>
+                               <span class="n">coverage</span> <span class="o">=</span> <span class="s1">&#39;national&#39;</span><span class="p">,</span>
+                               <span class="n">shift</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        
+        <span class="n">day</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">days_of_month</span> <span class="o">=</span> <span class="p">[]</span> 
+        
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">day</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="n">month</span><span class="p">):</span>
+                <span class="n">days_of_month</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">day</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">day</span> <span class="o">=</span> <span class="n">day</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">forward</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">days_of_month</span> <span class="o">=</span> <span class="n">days_of_month</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+        <span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="n">days_of_month</span><span class="p">:</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">weekday</span><span class="p">(</span><span class="n">day</span><span class="p">)</span> <span class="o">==</span> <span class="n">day_of_week</span><span class="p">):</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="n">count</span> <span class="o">==</span> <span class="n">order_in_month</span><span class="p">):</span>
+                <span class="n">correct_day</span> <span class="o">=</span> <span class="n">day</span>
+                <span class="k">break</span>
+                
+        <span class="k">if</span><span class="p">(</span><span class="n">shift</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">correct_day</span> <span class="o">=</span> <span class="n">correct_day</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
+                
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">correct_day</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">type_of_holiday</span><span class="p">,</span>
+            <span class="s1">&#39;city&#39;</span><span class="p">:</span> <span class="n">city</span><span class="p">,</span>
+            <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
+            <span class="s1">&#39;coverage&#39;</span><span class="p">:</span> <span class="n">coverage</span>
+        <span class="p">},</span> <span class="n">index</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+        
+        
+    
+<div class="viewcode-block" id="VHolidays.get_holidays_by_city"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.holidays.VHolidays.get_holidays_by_city">[docs]</a>    <span class="k">def</span> <span class="nf">get_holidays_by_city</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                             <span class="n">start</span><span class="p">,</span> 
+                             <span class="n">end</span><span class="p">,</span> 
+                             <span class="n">city</span><span class="p">,</span> 
+                             <span class="n">state</span><span class="p">,</span> 
+                             <span class="n">holiday_types</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+                             <span class="n">coverage</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+                             <span class="n">holidays_to_drop</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">days_of_week_to_drop</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;Method that get the raw table of holidays with this </span>
+
+<span class="sd">        :param city:</span>
+<span class="sd">            The city that you want to get the holidays</span>
+<span class="sd">        :type city:</span>
+<span class="sd">            class &#39;str&#39;</span>
+
+<span class="sd">        :param state:</span>
+<span class="sd">            The city that you want to get the holidays</span>
+<span class="sd">        :type state:</span>
+<span class="sd">            class &#39;str&#39;</span>
+
+<span class="sd">        :param start:</span>
+<span class="sd">            The first date of the range in which you want to get the holidays</span>
+<span class="sd">        :type start / end::</span>
+<span class="sd">            class &#39;str&#39; or &#39;datetime&#39;</span>
+
+<span class="sd">        :param end:</span>
+<span class="sd">            The last date of the range in which you want to get the holidays</span>
+<span class="sd">        :type start / end::</span>
+<span class="sd">            class &#39;str&#39; or &#39;datetime&#39;</span>
+
+<span class="sd">        :param holiday_types:</span>
+<span class="sd">            Type of holiday: &#39;optional&#39;, &#39;special&#39;, &#39;holiday&#39;</span>
+<span class="sd">        :type holiday_types:</span>
+<span class="sd">            class &#39;str&#39; or list</span>
+
+<span class="sd">        :param coverage:</span>
+<span class="sd">            Coverage of holiday: &#39;national&#39;, &#39;state&#39;, &#39;municipal&#39;</span>
+<span class="sd">        :type coverage:</span>
+<span class="sd">            class &#39;str&#39; or &#39;list&#39;</span>
+
+<span class="sd">        :param holidays_to_drop:</span>
+<span class="sd">            A list of holidays that you don’t want to consider</span>
+<span class="sd">        :type holidays_to_drop:</span>
+<span class="sd">            class list</span>
+
+<span class="sd">        :param days_of_week_to_drop:</span>
+<span class="sd">            A list of days of week that you don’t want to consider the holidays in that days.</span>
+<span class="sd">        :type days_of_week_to_drop:</span>
+<span class="sd">            class list</span>
+
+<span class="sd">        :return: A dataframe with the holidays, with name, date, coverage and other informations about the holidays</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">city</span> <span class="o">=</span> <span class="n">unidecode</span><span class="p">(</span><span class="n">city</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">))</span>
+        
+        <span class="n">covered_regional_dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;state == &#39;</span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;city == &#39;</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        
+        <span class="n">covered_regional_dataframe</span> <span class="o">=</span> <span class="n">covered_regional_dataframe</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &gt;= &#39;</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &lt;= &#39;</span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">covered_national_dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">national_holidays</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &gt;= &#39;</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &lt;= &#39;</span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">covered_special_dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">special_days</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &gt;= &#39;</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date &lt;= &#39;</span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">covered_national_dataframe</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">city</span>
+        <span class="n">covered_special_dataframe</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">city</span>
+        
+        <span class="n">covered_national_dataframe</span> <span class="o">=</span> <span class="n">covered_national_dataframe</span><span class="p">[</span><span class="n">covered_regional_dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        
+        <span class="n">complete_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">covered_regional_dataframe</span><span class="p">,</span> 
+                                 <span class="n">covered_national_dataframe</span><span class="p">,</span> 
+                                 <span class="n">covered_special_dataframe</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="n">complete_df</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">holiday_types</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">holiday_types</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="s1">&#39;vbrain&#39;</span><span class="p">)):</span>
+                <span class="n">complete_df</span> <span class="o">=</span> <span class="n">complete_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">complete_df</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">holiday_types</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">complete_df</span> <span class="o">=</span> <span class="n">complete_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">complete_df</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">holiday_types</span><span class="p">)]</span>
+            
+            
+        <span class="k">if</span><span class="p">(</span><span class="n">coverage</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">coverage</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="s1">&#39;vbrain&#39;</span><span class="p">)):</span>
+                <span class="n">complete_df</span> <span class="o">=</span> <span class="n">complete_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">complete_df</span><span class="p">[</span><span class="s1">&#39;coverage&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">coverage</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">complete_df</span> <span class="o">=</span> <span class="n">complete_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">complete_df</span><span class="p">[</span><span class="s1">&#39;coverage&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">coverage</span><span class="p">)]</span>
+                
+        <span class="k">if</span><span class="p">(</span><span class="n">holidays_to_drop</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">complete_df</span> <span class="o">=</span> <span class="n">complete_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">complete_df</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">holidays_to_drop</span><span class="p">)]</span>
+            
+        <span class="k">if</span><span class="p">(</span><span class="n">days_of_week_to_drop</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+            
+            <span class="n">weekdays_eng</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="mi">0</span><span class="p">:</span><span class="s1">&#39;monday&#39;</span><span class="p">,</span>
+                <span class="mi">1</span><span class="p">:</span><span class="s1">&#39;tuesday&#39;</span><span class="p">,</span>
+                <span class="mi">2</span><span class="p">:</span><span class="s1">&#39;wednesday&#39;</span><span class="p">,</span>
+                <span class="mi">3</span><span class="p">:</span><span class="s1">&#39;thursday&#39;</span><span class="p">,</span>
+                <span class="mi">4</span><span class="p">:</span><span class="s1">&#39;friday&#39;</span><span class="p">,</span>
+                <span class="mi">5</span><span class="p">:</span><span class="s1">&#39;saturday&#39;</span><span class="p">,</span>
+                <span class="mi">6</span><span class="p">:</span><span class="s1">&#39;sunday&#39;</span>
+            <span class="p">}</span>
+            
+            <span class="n">complete_df</span> <span class="o">=</span> <span class="n">complete_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">complete_df</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">weekdays_eng</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">weekday</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">days_of_week_to_drop</span><span class="p">)]</span>
+                
+        <span class="n">complete_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">complete_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> 
+        
+        <span class="k">return</span> <span class="n">complete_df</span></div>
+        
+    
+<div class="viewcode-block" id="VHolidays.get_bool_holiday"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.holidays.VHolidays.get_bool_holiday">[docs]</a>    <span class="k">def</span> <span class="nf">get_bool_holiday</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                         <span class="n">start</span><span class="p">,</span> 
+                         <span class="n">end</span><span class="p">,</span> 
+                         <span class="n">city</span><span class="p">,</span> 
+                         <span class="n">state</span><span class="p">,</span> 
+                         <span class="n">holiday_types</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+                         <span class="n">coverage</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span>
+                         <span class="n">holidays_to_drop</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">days_of_week_to_drop</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                         <span class="n">column_by_type</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                         <span class="n">eve_column</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+
+
+        <span class="sd">&quot;&quot;&quot;Method that get one or more columns with 0s or 1s about holiday informations </span>
+
+<span class="sd">        :param city:</span>
+<span class="sd">            The city that you want to get the holidays</span>
+<span class="sd">        :type city:</span>
+<span class="sd">            class &#39;str&#39;</span>
+
+<span class="sd">        :param state:</span>
+<span class="sd">            The city that you want to get the holidays</span>
+<span class="sd">        :type state:</span>
+<span class="sd">            class &#39;str&#39;</span>
+
+<span class="sd">        :param start:</span>
+<span class="sd">            The first date of the range in which you want to get the holidays</span>
+<span class="sd">        :type start / end::</span>
+<span class="sd">            class &#39;str&#39; or &#39;datetime&#39;</span>
+
+<span class="sd">        :param end:</span>
+<span class="sd">            The last date of the range in which you want to get the holidays</span>
+<span class="sd">        :type start / end::</span>
+<span class="sd">            class &#39;str&#39; or &#39;datetime&#39;</span>
+
+<span class="sd">        :param holiday_types:</span>
+<span class="sd">            Type of holiday: &#39;optional&#39;, &#39;special&#39;, &#39;holiday&#39;</span>
+<span class="sd">        :type holiday_types:</span>
+<span class="sd">            class &#39;str&#39; or list</span>
+
+<span class="sd">        :param coverage:</span>
+<span class="sd">            Coverage of holiday: &#39;national&#39;, &#39;state&#39;, &#39;municipal&#39;</span>
+<span class="sd">        :type coverage:</span>
+<span class="sd">            class &#39;str&#39; or &#39;list&#39;</span>
+
+<span class="sd">        :param holidays_to_drop:</span>
+<span class="sd">            A list of holidays that you don’t want to consider</span>
+<span class="sd">        :type holidays_to_drop:</span>
+<span class="sd">            class list</span>
+
+<span class="sd">        :param days_of_week_to_drop:</span>
+<span class="sd">            A list of days of week that you don’t want to consider the holidays in that days.</span>
+<span class="sd">        :type days_of_week_to_drop:</span>
+<span class="sd">            class list</span>
+
+<span class="sd">        :param column_by_type:</span>
+<span class="sd">            If true, for each holiday type will get a column in the datarame, that is, the models will treat them as different variables</span>
+<span class="sd">        :type column_by_type:</span>
+<span class="sd">            class bool</span>
+
+<span class="sd">        :param eve_column:</span>
+<span class="sd">            If true, an &#39;eve&#39; + {holiday_type} will be concatenated in the dataframe</span>
+<span class="sd">        :type column_by_type:</span>
+<span class="sd">            class eve_column</span>
+
+<span class="sd">        :return: A dataframe with boolean columns</span>
+<span class="sd">        :rtype: pandas.DataFrame</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        
+        <span class="n">city_holidays</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">get_holidays_by_city</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">start</span><span class="p">,</span> 
+                                                   <span class="n">end</span> <span class="o">=</span> <span class="n">end</span><span class="p">,</span> 
+                                                   <span class="n">city</span> <span class="o">=</span> <span class="n">city</span><span class="p">,</span> 
+                                                   <span class="n">state</span> <span class="o">=</span> <span class="n">state</span><span class="p">,</span> 
+                                                   <span class="n">holiday_types</span> <span class="o">=</span> <span class="n">holiday_types</span><span class="p">,</span>
+                                                   <span class="n">coverage</span> <span class="o">=</span> <span class="n">coverage</span><span class="p">,</span>
+                                                   <span class="n">holidays_to_drop</span> <span class="o">=</span> <span class="n">holidays_to_drop</span><span class="p">,</span>
+                                                   <span class="n">days_of_week_to_drop</span> <span class="o">=</span> <span class="n">days_of_week_to_drop</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">city_holidays</span> <span class="o">=</span> <span class="n">city_holidays</span>
+        <span class="n">date_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        <span class="n">full_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        
+        <span class="n">final_bool</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">final_bool</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">date_index</span><span class="o">.</span><span class="n">date</span>
+        
+        <span class="n">tem_b_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">column_by_type</span><span class="p">):</span>
+            
+            <span class="k">for</span> <span class="n">hol_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">city_holidays</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+                <span class="n">temp_bool</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span> <span class="o">=</span> <span class="n">date_index</span><span class="p">,</span> 
+                                     <span class="n">right</span><span class="o">=</span><span class="n">city_holidays</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;type == &#39;</span><span class="si">{</span><span class="n">hol_type</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)[[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">]],</span>
+                                     <span class="n">on</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span>
+                                     <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">temp_bool</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_bool</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">x</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="p">)</span>
+
+
+                <span class="n">col_name</span> <span class="o">=</span> <span class="s1">&#39;holiday_&#39;</span> <span class="o">+</span> <span class="n">hol_type</span>
+                <span class="n">temp_bool</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">col_name</span><span class="p">},</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="n">full_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span> <span class="o">=</span> <span class="n">full_df</span><span class="p">,</span> 
+                                     <span class="n">right</span><span class="o">=</span> <span class="n">temp_bool</span><span class="p">,</span>
+                                     <span class="n">on</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span>
+                                     <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">)</span>
+                
+            <span class="n">final_bool</span> <span class="o">=</span> <span class="n">full_df</span>
+
+                
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="n">final_bool</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">date_index</span><span class="p">,</span>
+                                  <span class="n">right</span><span class="o">=</span><span class="n">city_holidays</span><span class="p">[[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">]],</span>
+                                  <span class="n">on</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">,</span>
+                                  <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+            <span class="n">final_bool</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_bool</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">x</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="p">)</span>
+            <span class="n">final_bool</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;holiday_bool&#39;</span><span class="p">},</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            
+        <span class="k">if</span><span class="p">(</span><span class="n">eve_column</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">final_bool</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">col</span> <span class="o">!=</span> <span class="s1">&#39;date&#39;</span><span class="p">):</span>
+<span class="c1">#                     print(col.replace(&#39;holiday_&#39;, &#39;&#39;))</span>
+                    <span class="n">day_before_holiday</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_holidays_by_city</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> 
+                                                                   <span class="n">end</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> 
+                                                                   <span class="n">city</span> <span class="o">=</span> <span class="n">city</span><span class="p">,</span> 
+                                                                   <span class="n">state</span> <span class="o">=</span> <span class="n">state</span><span class="p">,</span>
+                                                                   <span class="n">holiday_types</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;holiday_&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                                                                   <span class="n">coverage</span> <span class="o">=</span> <span class="n">coverage</span><span class="p">,</span>
+                                                                   <span class="n">holidays_to_drop</span> <span class="o">=</span> <span class="n">holidays_to_drop</span><span class="p">,</span>
+                                                                   <span class="n">days_of_week_to_drop</span> <span class="o">=</span> <span class="n">days_of_week_to_drop</span><span class="p">)</span>
+<span class="c1">#                     print(day_before_holiday)</span>
+
+                    <span class="k">if</span><span class="p">(</span><span class="n">day_before_holiday</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                        <span class="n">final_bool</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s1">&#39;_eve&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_bool</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">final_bool</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s1">&#39;_eve&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_bool</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">final_bool</span></div>
+        
+    <span class="k">def</span> <span class="nf">gen_special_days</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">start</span><span class="p">,</span>
+                        <span class="n">end</span><span class="p">,</span>
+                        <span class="n">black_friday</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="n">mothers_day</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="n">fathers_day</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="n">childrens_day</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        
+        <span class="n">df_special_days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+        
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">black_friday</span><span class="p">):</span>
+                <span class="n">df_black_friday</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_holiday_by_rule</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Black Friday&#39;</span><span class="p">,</span>
+                                                                   <span class="n">type_of_holiday</span><span class="o">=</span><span class="s1">&#39;special&#39;</span><span class="p">,</span>
+                                                                   <span class="n">month</span><span class="o">=</span> <span class="mi">11</span><span class="p">,</span>
+                                                                   <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+                                                                   <span class="n">order_in_month</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                                                   <span class="n">day_of_week</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+                                                                   <span class="n">shift</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">df_special_days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_special_days</span><span class="p">,</span> <span class="n">df_black_friday</span><span class="p">])</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="n">mothers_day</span><span class="p">):</span>
+                <span class="n">df_mothers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_holiday_by_rule</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Mothers Day&#39;</span><span class="p">,</span>
+                                                              <span class="n">type_of_holiday</span><span class="o">=</span><span class="s1">&#39;special&#39;</span><span class="p">,</span>
+                                                              <span class="n">month</span><span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+                                                              <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+                                                              <span class="n">order_in_month</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                                              <span class="n">day_of_week</span> <span class="o">=</span> <span class="mi">6</span><span class="p">)</span>
+
+                <span class="n">df_special_days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_special_days</span><span class="p">,</span> <span class="n">df_mothers</span><span class="p">])</span>
+
+            <span class="k">if</span><span class="p">(</span><span class="n">fathers_day</span><span class="p">):</span>
+                <span class="n">df_fathers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_holiday_by_rule</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Fathers Day&#39;</span><span class="p">,</span>
+                                                              <span class="n">type_of_holiday</span><span class="o">=</span><span class="s1">&#39;special&#39;</span><span class="p">,</span>
+                                                              <span class="n">month</span><span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+                                                              <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+                                                              <span class="n">order_in_month</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                                              <span class="n">day_of_week</span> <span class="o">=</span> <span class="mi">6</span><span class="p">)</span>
+
+                <span class="n">df_special_days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_special_days</span><span class="p">,</span> <span class="n">df_fathers</span><span class="p">])</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">childrens_day</span><span class="p">):</span>
+            <span class="n">df_childrens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_new_yearly_holiday_df</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">start</span><span class="p">,</span>
+                                                                <span class="n">end</span> <span class="o">=</span> <span class="n">end</span><span class="p">,</span>
+                                                                <span class="n">day</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+                                                                <span class="n">month</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                                                                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Childrens Day&#39;</span><span class="p">,</span>
+                                                                <span class="n">holiday_type</span><span class="o">=</span> <span class="s1">&#39;special&#39;</span><span class="p">)</span>
+
+            <span class="n">df_special_days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_special_days</span><span class="p">,</span> <span class="n">df_childrens</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">df_special_days</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    
+    
+    <span class="k">def</span> <span class="nf">get_holiday_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">coverage</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    
+        <span class="k">for</span> <span class="n">unique_state</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
+            
+            <span class="n">citys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;state == &#39;</span><span class="si">{</span><span class="n">unique_state</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">city</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="n">number_citys</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">citys</span><span class="p">)</span>
+        
+            <span class="n">state_holidaty_count</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;state == &#39;</span><span class="si">{</span><span class="n">unique_state</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="n">state_holidaty_count</span> <span class="o">=</span> <span class="n">state_holidaty_count</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;count&#39;</span><span class="p">},</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">unique_city</span> <span class="ow">in</span> <span class="n">citys</span><span class="p">:</span>
+                
+                <span class="n">city_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">regional_holidays</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;state == &#39;</span><span class="si">{</span><span class="n">unique_state</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;city == &#39;</span><span class="si">{</span><span class="n">unique_city</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">))</span>
+                <span class="n">coverage_list</span> <span class="o">=</span> <span class="p">[]</span>
+                
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">city_dataframe</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+                    
+                    <span class="n">number_of_holidays</span> <span class="o">=</span> <span class="n">state_holidaty_count</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;name == &#39;</span><span class="si">{</span><span class="n">row</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;date == &#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">date</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    
+                    <span class="k">if</span><span class="p">(</span><span class="n">number_of_holidays</span> <span class="o">==</span> <span class="n">number_citys</span><span class="p">):</span>
+                        <span class="n">coverage_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">coverage_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;municipal&#39;</span><span class="p">)</span>
+                        
+                <span class="n">city_dataframe</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_state</span>
+                <span class="n">city_dataframe</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_city</span>        
+                <span class="n">city_dataframe</span><span class="p">[</span><span class="s1">&#39;coverage&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">coverage_list</span>                      
+                <span class="n">coverage</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">coverage</span><span class="p">,</span> <span class="n">city_dataframe</span><span class="p">])</span>
+                
+         
+                
+            
+        <span class="k">return</span> <span class="n">coverage</span></div>
+    
+    
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

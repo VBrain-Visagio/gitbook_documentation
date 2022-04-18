@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.models.automl &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.models.automl</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.models.automl</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.ml_model_object</span> <span class="kn">import</span> <span class="n">MLModelObject</span>
+<span class="kn">import</span> <span class="nn">vpipe.utils.forecast_metrics</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">xgboost</span>
+<span class="kn">from</span> <span class="nn">vpipe.utils.cross_validator</span> <span class="kn">import</span> <span class="n">CrossValidator</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">import</span> <span class="nn">vpipe.utils.forecast_metrics</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">psutil</span>
+<span class="kn">from</span> <span class="nn">vflow</span> <span class="kn">import</span> <span class="n">VFlow</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">flaml</span>
+    <span class="n">flaml</span><span class="o">.</span><span class="n">automl</span><span class="o">.</span><span class="n">mlflow</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pycaret</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="kn">from</span> <span class="nn">vpipe.utils.get_frequency_factor</span> <span class="kn">import</span> <span class="n">get_frequency_factor</span>
+
+<span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+<span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+<span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+<span class="n">forecast</span> <span class="o">=</span> <span class="s1">&#39;prediction&#39;</span>
+<span class="n">demand</span> <span class="o">=</span> <span class="s1">&#39;demand&#39;</span>
+<span class="n">key_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="n">when</span><span class="p">]</span>
+<span class="n">OUTPUT_PATH</span> <span class="o">=</span> <span class="s1">&#39;data/OUTPUT&#39;</span>
+
+<div class="viewcode-block" id="AutoML"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.automl.AutoML">[docs]</a><span class="k">class</span> <span class="nc">AutoML</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).</span>
+<span class="sd">    Try different algorithms for forecasting with FLAML (https://microsoft.github.io/FLAML/) or pycaret</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        &quot;hyperparams_config&quot;:[</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;:&quot;h01&quot;,</span>
+<span class="sd">            &quot;enabled&quot;:true,</span>
+<span class="sd">            &quot;step_name&quot;:&quot;AutoML&quot;,</span>
+<span class="sd">            &quot;params&quot;:{</span>
+<span class="sd">                &quot;horizon&quot;: 7,         # prediction horizon - mandatory</span>
+<span class="sd">                &quot;frequency&quot;: &quot;W&quot;,      # forecast frequency - mandatory </span>
+<span class="sd">                &quot;time_budget&quot;: 300,  # timebudget for automl - default: 300</span>
+<span class="sd">                &quot;models&quot;: [] #list of models to be passed (see the respective automl documentation to verify possibilities)</span>
+<span class="sd">                &quot;use_pycaret&quot;: false, # if to use pycaret, if false than flaml is used - default: false</span>
+<span class="sd">                &quot;flaml_params&quot;: {}, # params for flaml: metric, eval_method, task - default: wape, &quot;cv&quot;, &quot;regression&quot; ; respectvely </span>
+<span class="sd">                &quot;pycaret_params&quot;: {}, # params for pycaret </span>
+<span class="sd">                &quot;cross_validation&quot;: false, #if cross validation will be performed - default: false</span>
+<span class="sd">                &quot;cross_params_dict&quot;: {},   #dictionary with keys being the params to vary in CV and values the possible values</span>
+<span class="sd">                &quot;cross_lookback&quot;: 52,  # size of the train set in CV (how many timestep will be taken in each fold)</span>
+<span class="sd">                &quot;cross_folds&quot;: 5,    #number of cross folds in CV</span>
+<span class="sd">                &quot;remove_unrealted_leading_features&quot;: false,  # for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_importance</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_columns</span> <span class="o">=</span> <span class="p">[]</span>       
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="AutoML.fit"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.automl.AutoML.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span><span class="n">MLModelObject</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Fit a AutoML model. As a supervised learning algorithm, needs the supervised prep step to be present in the pipeline before the model. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mo.data_map : dict</span>
+
+<span class="sd">            :supervised_dataset: Pandas dataframe containing the features. Established in the supervised prep step</span>
+<span class="sd">            :supervised_target: Pandas dataframe containing the target dataset. Established in the supervised prep step</span>
+
+<span class="sd">        mo.env_vars : dict</span>
+<span class="sd">            </span>
+<span class="sd">            :prediction_strategy: Prediction Strategy defined in the supervised prep step</span>
+<span class="sd">            :supervised_categorical_columns: Columns that must be treated as categorical, defined in the supervised prep step </span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mo.env_vars: dict</span>
+
+<span class="sd">            :model_features: Dictionary containing two keys: &quot;feature_columns&quot;: (with a list of the columns used in training) </span>
+<span class="sd">                and &quot;feature_importance&quot; (with the average feature_importance of collumns)</span>
+<span class="sd">            :vflow_client: vflow client, only used for pycaret</span>
+<span class="sd">        </span>
+<span class="sd">        self.models: dict</span>
+<span class="sd">            Dictionary saved as a propertie of the class, that varies according to prediction strategy (defined in the supervised prep step).</span>
+<span class="sd">            Each key is the future time step (&quot;demand+0&quot;, &quot;demand+1&quot;, ...) and the value is tyhe model trained for the timestep </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hyperparams_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_params</span><span class="p">()</span>
+        
+        <span class="n">df_X</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;supervised_dataset&#39;</span><span class="p">)</span>
+        <span class="n">df_y</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;supervised_target&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="p">[</span><span class="s1">&#39;horizon&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="o">=</span> <span class="n">hyperparams_config</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;prediction_strategy&#39;</span><span class="p">)</span>
+        <span class="n">vflow_client</span><span class="p">:</span> <span class="n">VFlow</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;vflow_client&#39;</span><span class="p">)</span>
+
+        <span class="c1">## Fill params ========================================</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timebudget</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;timebudget&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models_to_test</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_pycaret</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_pycaret&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pycaret_params</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pycaret_params&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flaml_params</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flaml_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scale&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        
+        
+        <span class="c1"># self.cumulative = hyperparams_config.get(&#39;cumulative&#39;, False)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_unrelated_leading_features</span> <span class="o">=</span> <span class="n">hyperparams_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;remove_unrelated_leading_features&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1">#categorical columns</span>
+        <span class="n">categorical_features</span> <span class="o">=</span>  <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;supervised_categorical_columns&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">categorical_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_X</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">df_X</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;category&#39;</span> <span class="ow">or</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">categorical_features</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_numeric_columns</span><span class="p">(</span><span class="n">df_X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">future_timestep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">horizon</span><span class="p">):</span>
+
+                <span class="c1">#selecting the demand column related to the timestep</span>
+                <span class="n">future_timestep</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">y_of_future_timestep</span> <span class="o">=</span> <span class="n">demand</span> <span class="o">+</span><span class="s1">&#39;_+&#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">future_timestep</span><span class="p">)</span>
+                <span class="n">y_train_columns</span> <span class="o">=</span> <span class="n">key_columns</span> <span class="o">+</span> <span class="p">[</span><span class="n">y_of_future_timestep</span><span class="p">]</span>
+                <span class="n">df_X_train</span><span class="p">,</span> <span class="n">df_y_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_non_null_y</span><span class="p">(</span><span class="n">df_X</span><span class="p">,</span><span class="n">df_y</span><span class="p">,</span><span class="n">y_of_future_timestep</span><span class="p">)</span>
+                
+                <span class="n">regressor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_automl</span><span class="p">(</span><span class="n">df_X_train</span><span class="p">,</span><span class="n">df_y_train</span><span class="p">,</span><span class="n">y_train_columns</span><span class="p">,</span><span class="n">y_of_future_timestep</span><span class="p">,</span><span class="n">vflow_client</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">y_of_future_timestep</span><span class="p">]</span> <span class="o">=</span> <span class="n">regressor</span>
+                
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span> <span class="o">==</span> <span class="s2">&quot;recursive&quot;</span><span class="p">:</span>
+
+            <span class="n">y_train_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">demand</span><span class="p">]</span><span class="o">+</span><span class="n">key_columns</span>
+            <span class="n">df_X_train</span><span class="p">,</span> <span class="n">df_y_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_non_null_y</span><span class="p">(</span><span class="n">df_X</span><span class="p">,</span><span class="n">df_y</span><span class="p">,</span><span class="n">demand</span><span class="p">)</span>
+            
+            <span class="n">regressor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_automl</span><span class="p">(</span><span class="n">df_X_train</span><span class="p">,</span><span class="n">df_y_train</span><span class="p">,</span><span class="n">y_train_columns</span><span class="p">,</span><span class="n">demand</span><span class="p">,</span><span class="n">vflow_client</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span> <span class="o">=</span> <span class="n">regressor</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_importance</span><span class="p">:</span>
+            <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;model_features&#39;</span><span class="p">,{</span><span class="s2">&quot;feature_importance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_importance</span><span class="p">,</span> <span class="s2">&quot;feature_columns&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_columns</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="AutoML.predict"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.automl.AutoML.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span> <span class="n">MLModelObject</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method that use the fitted models to make the prediction. As a supervised leanring class, the supervised prep step need to be part of the pipeline before the step. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mo.env_var : dict</span>
+
+<span class="sd">            :ref_date: Reference date for the forecast period</span>
+<span class="sd">        </span>
+<span class="sd">        mo.data_map : dict</span>
+
+<span class="sd">            :supervised_dataset: Pandas dataframe containing the features. Established in the supervised prep step</span>
+<span class="sd">            </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mo.data_map : dict</span>
+
+<span class="sd">            :supervised_dataset: Pandas dataframe containing the forecast. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">get_frequency_factor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">)</span>
+        
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">)</span>
+        
+        <span class="n">models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span>
+
+        <span class="n">df_X</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;supervised_dataset&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_numeric_columns</span><span class="p">(</span><span class="n">df_X</span><span class="p">)</span>
+
+        <span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">:</span>
+
+        
+            <span class="c1">#ref date is the base for the forecast in all horizon</span>
+            <span class="n">df_X</span> <span class="o">=</span> <span class="n">df_X</span><span class="p">[</span><span class="n">df_X</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">ref_date</span><span class="p">]</span>
+            <span class="n">base_date</span> <span class="o">=</span> <span class="n">df_X</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">df_X_base</span> <span class="o">=</span> <span class="n">df_X</span><span class="p">[</span><span class="n">df_X</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">base_date</span><span class="p">]</span>
+
+            
+            <span class="k">for</span> <span class="n">future_timestep</span><span class="p">,</span> <span class="n">regressor</span> <span class="ow">in</span> <span class="n">models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                
+                <span class="n">timestep</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">future_timestep</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">demand</span><span class="o">+</span><span class="s1">&#39;_+&#39;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_unrelated_leading_features</span><span class="p">:</span>
+                    <span class="n">df_X_base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_unrelated_leading_features</span><span class="p">(</span><span class="n">df_X_base</span><span class="p">,</span> <span class="n">timestep</span><span class="p">)</span>
+                
+         
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_pycaret</span><span class="p">:</span>
+                    <span class="n">vflow_client</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_model</span><span class="p">()</span>
+                    <span class="n">regression_model</span> <span class="o">=</span> <span class="n">regressor</span>
+                    <span class="n">file_name</span> <span class="o">=</span> <span class="n">vflow_client</span><span class="o">.</span><span class="n">download_artifacts</span><span class="p">(</span><span class="n">regression_model</span><span class="p">,</span> <span class="n">run_id</span> <span class="o">=</span> <span class="n">vflow_client</span><span class="o">.</span><span class="n">get_created_run_id</span><span class="p">())</span>
+                    <span class="n">regression_model</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">prediction</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">predict_model</span><span class="p">(</span><span class="n">regression_model</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">df_X_base</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">))</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span> <span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">prediction</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df_X_base</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">))</span>
+                
+                <span class="n">prediction_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">forecast</span><span class="p">:</span> <span class="n">prediction</span><span class="p">})</span>
+                <span class="n">prediction_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_X_base</span><span class="p">[</span><span class="n">key_columns</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">),</span><span class="n">prediction_df</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">prediction_df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prediction_df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">pd</span><span class="o">.</span><span class="n">DateOffset</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">factor</span><span class="p">:</span><span class="n">timestep</span><span class="p">})</span>
+                <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction_df</span><span class="p">)</span>
+                
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span> <span class="o">==</span> <span class="s1">&#39;recursive&#39;</span><span class="p">:</span>
+            <span class="n">df_X</span> <span class="o">=</span> <span class="n">df_X</span><span class="p">[</span><span class="n">df_X</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="n">ref_date</span><span class="p">]</span>
+            
+            <span class="n">regressor</span> <span class="o">=</span> <span class="n">models</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_pycaret</span><span class="p">:</span>
+                <span class="n">vflow_client</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_model</span><span class="p">()</span>
+                <span class="n">regression_model</span> <span class="o">=</span> <span class="n">regressor</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="n">vflow_client</span><span class="o">.</span><span class="n">download_artifacts</span><span class="p">(</span><span class="n">regression_model</span><span class="p">,</span> <span class="n">run_id</span> <span class="o">=</span> <span class="n">vflow_client</span><span class="o">.</span><span class="n">get_created_run_id</span><span class="p">())</span>
+                <span class="n">regression_model</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">prediction</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">predict_model</span><span class="p">(</span><span class="n">regression_model</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">df_X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">))</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span> <span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prediction</span> <span class="o">=</span> <span class="n">regressor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df_X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">))</span>
+            <span class="n">prediction_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">forecast</span><span class="p">:</span> <span class="n">prediction</span><span class="p">})</span>
+            <span class="n">prediction</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df_X</span><span class="p">[</span><span class="n">key_columns</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">),</span><span class="n">prediction_df</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prediction</span><span class="p">)</span>
+
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">predictions</span><span class="p">)[[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="n">when</span><span class="p">,</span><span class="n">forecast</span><span class="p">]]</span>
+        
+        <span class="n">y</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1">## ==================================================</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="s1">&#39;prediction&#39;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mo</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_remove_unrelated_leading_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_X_train</span><span class="p">,</span> <span class="n">future_timestep</span><span class="p">,</span> <span class="n">cumulative</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove leading features that are not related with the future timestep. Example, for the model responsible for the demand+3, only the feature three steps ahead will be considered</span>
+<span class="sd">        Even if during the foward looking transformer more features were generated </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># filtering</span>
+        <span class="n">forward_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_X_train</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span>
+                        <span class="p">(((</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">future_timestep</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_forward_looking&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">col</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="s2">&quot;_forward_looking&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col</span><span class="p">))]</span>
+        <span class="n">df_X_train_</span> <span class="o">=</span> <span class="n">df_X_train</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">forward_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1">## rename</span>
+        <span class="n">rename_cols</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="n">col</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">future_timestep</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_forward_looking&quot;</span><span class="p">)]</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_X_train_</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="p">((</span><span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">future_timestep</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_forward_looking&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">col</span><span class="p">)}</span>
+        <span class="n">df_X_train_</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">rename_cols</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df_X_train_</span>
+
+    <span class="k">def</span> <span class="nf">_fit_automl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df_X_train</span><span class="p">,</span><span class="n">df_y_train</span><span class="p">,</span><span class="n">y_train_columns</span><span class="p">,</span><span class="n">y_of_future_timestep</span><span class="p">,</span><span class="n">vflow_client</span><span class="p">):</span>
+        <span class="n">X_columns</span> <span class="o">=</span> <span class="n">df_X_train</span><span class="o">.</span><span class="n">columns</span>
+        
+        <span class="c1">#merge to certify that the order is correct</span>
+        <span class="n">df_train</span> <span class="o">=</span> <span class="n">df_X_train</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df_y_train</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">),</span> <span class="n">on</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_pycaret</span><span class="p">:</span>
+            <span class="n">numeric_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_X_train</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categorical_features</span><span class="p">]</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;RAM memory % used: </span><span class="si">{</span><span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">df_X_train</span><span class="p">,</span> 
+                            <span class="n">target</span> <span class="o">=</span> <span class="n">y_of_future_timestep</span><span class="p">,</span> 
+                            <span class="n">train_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;train_size&#39;</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span>
+                            <span class="n">session_id</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> 
+                            <span class="n">remove_perfect_collinearity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_strategy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;remove_perfect_collinearity&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">),</span> 
+                            <span class="n">high_cardinality_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">categorical_features</span><span class="p">,</span> 
+                            <span class="n">numeric_features</span> <span class="o">=</span> <span class="n">numeric_features</span><span class="p">,</span> <span class="n">silent</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="c1">#model = create_model(self.models[0])</span>
+            <span class="c1">#regression_model = tune_model(model, optimize = &#39;MAE&#39;)</span>
+            <span class="n">models</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">compare_models</span><span class="p">(</span><span class="n">include</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models_to_test</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="s1">&#39;MAE&#39;</span><span class="p">,</span> <span class="n">budget_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timebudget</span><span class="p">)</span>
+            <span class="n">regression_model</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">automl</span><span class="p">(</span><span class="n">optimize</span> <span class="o">=</span> <span class="s1">&#39;MAE&#39;</span><span class="p">)</span>
+            <span class="n">regression_model</span> <span class="o">=</span> <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">finalize_model</span><span class="p">(</span><span class="n">regression_model</span><span class="p">)</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;RAM memory % used: </span><span class="si">{</span><span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1">#saving model</span>
+            <span class="n">outpath</span> <span class="o">=</span> <span class="s2">&quot;data/OUTPUT&quot;</span>
+            <span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;model_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">model_name</span><span class="p">)</span>
+            <span class="n">pycaret</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">regression_model</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+            <span class="n">file_name</span> <span class="o">+=</span> <span class="s2">&quot;.pkl&quot;</span>
+            <span class="n">vflow_client</span><span class="o">.</span><span class="n">log_artifact</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="n">regression_model</span> <span class="o">=</span> <span class="n">model_name</span><span class="o">+</span> <span class="s2">&quot;.pkl&quot;</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">regression_estimator</span> <span class="o">=</span> <span class="n">flaml</span><span class="o">.</span><span class="n">automl</span><span class="o">.</span><span class="n">AutoML</span><span class="p">()</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;RAM memory % used: </span><span class="si">{</span><span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flaml_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="n">wape_metric</span><span class="p">)</span>
+            <span class="n">regression_estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df_train</span><span class="p">[</span><span class="n">X_columns</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">),</span> 
+                                        <span class="n">df_train</span><span class="p">[</span><span class="n">y_train_columns</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span>
+                                        <span class="n">time_budget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timebudget</span><span class="p">,</span>
+                                        <span class="n">eval_method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flaml_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;eval_method&#39;</span><span class="p">,</span><span class="s2">&quot;cv&quot;</span><span class="p">),</span>
+                                        <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flaml_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">,</span><span class="s2">&quot;regression&quot;</span><span class="p">),</span>
+                                        <span class="n">metric</span> <span class="o">=</span> <span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+                                        <span class="n">estimator_list</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;auto&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">models_to_test</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">models_to_test</span><span class="p">),</span>
+                                        <span class="n">verbose</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                                        <span class="n">log_file_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Best </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s1"> metric: </span><span class="si">{</span><span class="n">regression_estimator</span><span class="o">.</span><span class="n">best_loss</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;RAM memory % used: </span><span class="si">{</span><span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">regression_model</span> <span class="o">=</span> <span class="n">regression_estimator</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">regression_model</span><span class="o">.</span><span class="n">feature_importances_</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_columns</span> <span class="o">=</span> <span class="n">df_train</span><span class="p">[</span><span class="n">X_columns</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">key_columns</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+
+
+        <span class="k">return</span> <span class="n">regression_model</span>
+
+    <span class="k">def</span> <span class="nf">_check_numeric_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df_X</span><span class="p">):</span>
+        <span class="c1">#dropping columns that are nom numeric neither categorical </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([(</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="s1">&#39;fi&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">df_X</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">key_columns</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)]):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;All related values must be numeric or category or encoded before training&quot;</span><span class="p">)</span>
+            <span class="n">columns_drop</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span><span class="p">,</span><span class="n">dtype</span> <span class="ow">in</span> <span class="n">df_X</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">key_columns</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s1">&#39;fi&#39;</span> <span class="ow">and</span> <span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]]</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Droping: </span><span class="si">{columns_drop}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">columns_drop</span> <span class="o">=</span> <span class="n">columns_drop</span><span class="p">))</span>
+            <span class="n">df_X</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">columns_drop</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_select_non_null_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df_X</span><span class="p">,</span><span class="n">df_y</span><span class="p">,</span><span class="n">y_column</span><span class="p">):</span>
+        <span class="n">df_y_nan</span> <span class="o">=</span> <span class="n">df_y</span><span class="p">[</span><span class="n">df_y</span><span class="p">[</span><span class="n">y_column</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">df_y_nan</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">min_date</span> <span class="o">=</span> <span class="n">df_y_nan</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">df_y_train</span> <span class="o">=</span> <span class="n">df_y</span><span class="p">[</span><span class="n">df_y</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">&lt;</span><span class="n">min_date</span><span class="p">]</span>
+            <span class="n">df_X_train</span> <span class="o">=</span> <span class="n">df_X</span><span class="p">[</span><span class="n">df_X</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">&lt;</span><span class="n">min_date</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df_y_train</span> <span class="o">=</span> <span class="n">df_y</span>
+            <span class="n">df_X_train</span> <span class="o">=</span> <span class="n">df_X</span>
+        <span class="k">return</span> <span class="n">df_X_train</span><span class="p">,</span><span class="n">df_y_train</span></div>
+
+
+<span class="k">def</span> <span class="nf">wape_metric</span><span class="p">(</span>
+    <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">weight_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_train</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups_train</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+    <span class="n">wape</span> <span class="o">=</span> <span class="n">vpipe</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">forecast_metrics</span><span class="o">.</span><span class="n">wape</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wape</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;wape&quot;</span><span class="p">:</span><span class="n">wape</span><span class="p">}</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

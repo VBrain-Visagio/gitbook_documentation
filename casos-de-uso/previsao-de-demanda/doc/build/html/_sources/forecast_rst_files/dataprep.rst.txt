@@ -1,0 +1,142 @@
+Dataprep steps
+======================
+
+
+Aggregation
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.aggregation
+    :members:
+
+Data prep transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.data_prep_transformer
+    :members:
+
+    
+Data processor 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.data_processor
+    :members:
+
+
+Dataset filter 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.dataset_filter
+    :members:
+
+
+Evaluator Loader
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.evaluator_loader
+    :members:
+
+    
+Merge features 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.merge_features
+    :members:
+
+    
+    
+Missing values transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.missing_values_transformer
+    :members:
+
+
+    
+Prepare supervised transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.supervised_prep_transformer
+    :members:
+
+    
+    
+Date features extractor 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.date_features_extractor
+    :members:
+
+    
+Dummy Transformer
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.dummy_transformer
+    :members:
+
+
+Feature encoder 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.feature_encoder
+    :members:
+
+    
+Forward looking tranformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.forward_looking_transformer
+    :members:
+
+
+Group Features
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.group_feature_transformer
+    :members:
+
+    
+Holidays 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.holidays
+    :members:
+
+    
+Lag feature transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.lag_feature_transformer
+    :members:
+
+Operation Between Columns
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.operation_between_columns
+    :members:
+
+Rolling window tranformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.rolling_window_transformer
+    :members:
+        
+    
+Stockout transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.stockout_transformer
+    :members:
+
+    
+Time to chistmas transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.time_to_christmas_transformer
+    :members:
+        
+    
+Working day 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.featurization.working_day
+    :members:

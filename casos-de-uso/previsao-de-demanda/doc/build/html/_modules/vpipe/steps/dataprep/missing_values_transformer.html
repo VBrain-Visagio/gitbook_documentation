@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.dataprep.missing_values_transformer &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.dataprep.missing_values_transformer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.dataprep.missing_values_transformer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.model_object</span> <span class="kn">import</span> <span class="n">ModelObject</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+
+<span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+<span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+<span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MissingValueFiller"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.missing_values_transformer.MissingValueFiller">[docs]</a><span class="k">class</span> <span class="nc">MissingValueFiller</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Step for filling missing values. </span>
+<span class="sd">    </span>
+<span class="sd">    :dataset_name (str):</span>
+<span class="sd">        The dataset where the column to be filled is present (mandatory)</span>
+<span class="sd">    :column_header (list):</span>
+<span class="sd">        The name of the column (mandatory)</span>
+<span class="sd">    :forward_fill (str):</span>
+<span class="sd">        How the last values will be filled (values that don&#39;t have a value for dates bigger than its own). Possible values are:</span>
+
+<span class="sd">            * ffill/last: use the last value of the column as filling value</span>
+<span class="sd">            * zero: fill with zeros</span>
+<span class="sd">    </span>
+<span class="sd">    :backward_fill (str):</span>
+<span class="sd">        How the first values will be filled (values that don&#39;t have a value for dates smaller than its own). Possible values are:</span>
+
+<span class="sd">            * bfill/first: use the first value of the column as filling value</span>
+<span class="sd">            * zero: fill with zeros    </span>
+
+<span class="sd">    :middle_fill (true):</span>
+<span class="sd">        How the values in that have a value not missing for dates bigger and smaller than its own will be filled (values the are in middle of two non missing values). Possible values are:</span>
+<span class="sd">            </span>
+<span class="sd">            * ffill: use the last value before the absent as filling value</span>
+<span class="sd">            * bfill: use the first value after the absent as filling value</span>
+<span class="sd">            * zero: fill with zeros </span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;: &quot;d05&quot;,</span>
+<span class="sd">            &quot;enabled&quot;: true,</span>
+<span class="sd">            &quot;step_name&quot;: &quot;MissingValueFiller&quot;,</span>
+<span class="sd">            &quot;params&quot;: {</span>
+<span class="sd">                &quot;missing_values&quot;: [</span>
+<span class="sd">                    {</span>
+<span class="sd">                        &quot;dataset_name&quot;: &quot;target&quot;,</span>
+<span class="sd">                        &quot;column_header&quot;: &quot;demand&quot;,</span>
+<span class="sd">                        &quot;forward_looking&quot;: false,</span>
+<span class="sd">                        &quot;forward_fill&quot;: &quot;zero&quot;,</span>
+<span class="sd">                        &quot;middle_fill&quot;: &quot;zero&quot;,</span>
+<span class="sd">                        &quot;backward_fill&quot;: &quot;zero&quot;</span>
+<span class="sd">                    }</span>
+<span class="sd">                ]</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span> <span class="n">ModelObject</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting step transformation&quot;</span><span class="p">)</span>
+
+        <span class="n">dataprep_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_params</span><span class="p">()</span>
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">dataprep_config</span><span class="p">[</span><span class="s1">&#39;missing_values&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="s1">&#39;fill&#39;</span> <span class="ow">in</span> <span class="n">proc</span> <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">keys</span><span class="p">()]):</span>
+                <span class="n">data_name</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;dataset_name&#39;</span><span class="p">]</span>
+                <span class="n">col</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;column_header&#39;</span><span class="p">]</span>
+
+                <span class="n">df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_name</span><span class="p">)</span>
+                <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span> <span class="n">where</span><span class="p">]]</span>
+                <span class="n">key_cols</span> <span class="o">=</span> <span class="n">dimensions</span> <span class="o">+</span> <span class="p">[</span><span class="n">when</span><span class="p">]</span>
+
+                <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">key_cols</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">aggs</span><span class="o">=</span><span class="p">{</span><span class="n">when</span><span class="p">:[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span><span class="s1">&#39;max&#39;</span><span class="p">]}</span>
+                <span class="n">df_date_bounds</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">(),</span> <span class="n">dimensions</span> <span class="o">+</span> <span class="p">[</span><span class="n">when</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">aggs</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+                <span class="n">df_date_bounds</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="n">df_date_bounds</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df_date_bounds</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">dimensions</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;middle_fill&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">middle_fill</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;middle_fill&#39;</span><span class="p">]</span>
+                    <span class="n">filter_</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">when</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;datemin&#39;</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">when</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;datemax&#39;</span><span class="p">])</span>
+
+                    <span class="k">if</span> <span class="n">middle_fill</span> <span class="o">==</span> <span class="s2">&quot;bfill&quot;</span><span class="p">:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">key_cols</span> <span class="o">+</span> <span class="p">[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">bfill</span><span class="p">()[</span><span class="n">col</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">middle_fill</span> <span class="o">==</span> <span class="s2">&quot;zero&quot;</span><span class="p">:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">middle_fill</span> <span class="o">==</span> <span class="s2">&quot;ffill&quot;</span><span class="p">:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">key_cols</span> <span class="o">+</span> <span class="p">[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">ffill</span><span class="p">()[</span><span class="n">col</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="s1">&#39;forward_fill&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">forward_fill</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;forward_fill&#39;</span><span class="p">]</span>
+                    <span class="n">filter_</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">when</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;datemax&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">forward_fill</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;last&quot;</span><span class="p">,</span> <span class="s2">&quot;ffill&quot;</span><span class="p">]:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">key_cols</span> <span class="o">+</span> <span class="p">[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">ffill</span><span class="p">()[</span><span class="n">col</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">forward_fill</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">]:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;backward_fill&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">backward_fill</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;backward_fill&#39;</span><span class="p">]</span>
+                    <span class="n">filter_</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">when</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;datemin&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">backward_fill</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;first&quot;</span><span class="p">,</span> <span class="s2">&quot;bfill&quot;</span><span class="p">]:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">key_cols</span> <span class="o">+</span> <span class="p">[</span><span class="n">col</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">bfill</span><span class="p">()[</span><span class="n">col</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">backward_fill</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">]:</span>
+                        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">filter_</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;fill&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">fill</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;fill&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">fill</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;zero&quot;</span><span class="p">]:</span>
+                        <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;custom_fill&#39;</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+                    <span class="n">fill</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;custom_fill&#39;</span><span class="p">]</span>
+                    <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fill</span><span class="p">)</span>
+
+                <span class="n">forward_looking</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;forward_looking&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">forward_looking</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="n">ref_date</span><span class="p">,</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;datemin&#39;</span><span class="p">,</span><span class="s1">&#39;datemax&#39;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+
+
+                <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data_name</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mo</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

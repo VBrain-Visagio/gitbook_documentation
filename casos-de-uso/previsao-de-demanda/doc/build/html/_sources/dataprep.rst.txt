@@ -1,0 +1,278 @@
+Dataprep steps
+======================
+
+Assertion 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.assertion
+    :members:
+
+    
+
+    
+Aws cost alert 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.aws_cost_alert
+    :members:
+
+    
+
+    
+Dailysales transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.dailysales_transformer
+    :members:
+
+    
+
+    
+Dataset filter 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.dataset_filter
+    :members:
+
+    
+
+    
+Data prep transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.data_prep_transformer
+    :members:
+
+    
+
+    
+Data processor 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.data_processor
+    :members:
+
+    
+
+    
+Data reader 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.data_reader
+    :members:
+
+    
+
+    
+Date features extractor 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.date_features_extractor
+    :members:
+
+    
+
+    
+Feature encoder 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.feature_encoder
+    :members:
+
+    
+
+    
+Fill absent dates 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.fill_absent_dates
+    :members:
+
+    
+
+    
+Forward looking tranformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.forward_looking_tranformer
+    :members:
+
+    
+Holidays 
+---------------------------------
+
+Class that puts holidays columns in your model object.
+
+:city (str):
+    The city that you want to get the holidays 
+:state (str):
+    The state that you want to get the holidays
+:holiday_types (str or list):
+    
+    Type of holiday
+
+    :optional: 
+        Insert optional holidays such as Teacher's Day in Brazil
+    :holiday:
+        Insert not optional holidays such as Christmas
+    :special:
+        Insert special days such as Mother's Day or Black Friday
+
+:coverage (str or list): 
+    The coverage of the holiday: *'national'*, *'state'*, *'municipal'*
+
+:column_by_type (bool):
+    If true, for each holiday type will get a column in the datarame, that is, the models will treat them as different variables
+        
+:eve_column (bool):
+    If true, an *'eve_'* + {holiday_type} will be concatenated in the dataframe
+
+:days_of_week_to_drop (list):
+    A list of days of week that you don't want to consider the holidays in that days.
+
+:holidays_to_drop (list):
+    A list of holidays that you don't want to consider
+
+.. code-block:: python
+
+    { # on dataprep_config, use the parameters above
+
+        "featurization":{
+            "holidays"{
+                city :  'rio de janeiro'            
+                state : 'RJ'                        
+                holiday_types : ['special', 'holiday']            
+                coverage : ['municipal', 'national']                    
+                column_by_type : true               
+                eve_column : true                       
+                days_of_week_to_drop : ['monday', 'sunday']
+                holidays_to_drop : ['Natal']
+            }
+        }
+
+    }
+
+
+
+.. automodule:: vpipe.steps.dataprep.holidays
+    :members:
+
+
+    
+Lag feature transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.lag_feature_transformer
+    :members:
+
+    
+
+    
+Merge features 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.merge_features
+    :members:
+
+    
+
+    
+Merge geolocation 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.merge_geolocation
+    :members:
+
+    
+
+    
+Metadata transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.metadata_transformer
+    :members:
+
+    
+
+    
+Missing values transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.missing_values_transformer
+    :members:
+
+    
+
+    
+Prepare related transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.prepare_related_transformer
+    :members:
+
+    
+
+    
+Prepare supervised transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.prepare_supervised_transformer
+    :members:
+
+    
+
+    
+Rolling window tranformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.rolling_window_tranformer
+    :members:
+
+    
+
+    
+Scaler 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.scaler
+    :members:
+
+    
+
+    
+Stockout transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.stockout_transformer
+    :members:
+
+    
+
+    
+Time to chistmas transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.time_to_chistmas_transformer
+    :members:
+
+    
+
+    
+Time to transformer 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.time_to_transformer
+    :members:
+
+
+
+    
+
+    
+Working day 
+---------------------------------
+
+.. automodule:: vpipe.steps.dataprep.working_day
+    :members:
+
+

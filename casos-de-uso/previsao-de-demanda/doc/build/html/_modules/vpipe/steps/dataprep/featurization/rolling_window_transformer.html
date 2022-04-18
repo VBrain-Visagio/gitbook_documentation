@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.dataprep.featurization.rolling_window_transformer &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.dataprep.featurization.rolling_window_transformer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.dataprep.featurization.rolling_window_transformer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pyspark.pandas.config</span> <span class="kn">import</span> <span class="n">reset_option</span><span class="p">,</span> <span class="n">set_option</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">TransformerMixin</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.ml_model_object</span> <span class="kn">import</span> <span class="n">MLModelObject</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.model_object</span> <span class="kn">import</span> <span class="n">ModelObject</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.window</span> <span class="kn">import</span> <span class="n">Window</span>
+<span class="kn">import</span> <span class="nn">pyspark.sql.functions</span> <span class="k">as</span> <span class="nn">func</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">memory_profiler</span> <span class="kn">import</span> <span class="n">LogFile</span><span class="p">,</span> <span class="n">profile</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">LogFile</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">reportIncrementFlag</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+<span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+<span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+
+<div class="viewcode-block" id="RollingWindowTransformer"><a class="viewcode-back" href="../../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.featurization.rolling_window_transformer.RollingWindowTransformer">[docs]</a><span class="k">class</span> <span class="nc">RollingWindowTransformer</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute statistics for a rolling window, generating columns named accordingly. </span>
+<span class="sd">    Each column will be assign a name according to its transformation: **&quot;window_size + &quot;_rolling_&quot;+ statistic + column&quot;**. </span>
+
+<span class="sd">    For instance appling a rolling window, with size 36 and &quot;mean&quot; as statistic, for the column &quot;foo&quot; will produce the column:  &quot;36_rolling_mean_foo&quot;</span>
+
+<span class="sd">    :dataset_name (str):</span>
+<span class="sd">        The dataset in which the transformation will be applied (optional - default: &quot;related&quot;)</span>
+<span class="sd">    :column (str):</span>
+<span class="sd">        The column to be transformed (mandatory)</span>
+<span class="sd">    :data_source_name (str):</span>
+<span class="sd">        The dataset name where the column to be transformed is present (optional - default: &quot;related&quot;)</span>
+<span class="sd">    :windows (int):</span>
+<span class="sd">        Windows size to be applied (mandatory)</span>
+<span class="sd">    :drop_column (bool):</span>
+<span class="sd">        If the original column must be dropped after the encoding (optional - default: false)</span>
+<span class="sd">    :encoded (bool):</span>
+<span class="sd">        If the column that the transformation will be applied was transformed or not (optional - default: false)</span>
+<span class="sd">    :shift_after (int):</span>
+<span class="sd">        If after the generation of the column we must shift it (usefull for recursive modelling) (optional - default: None)</span>
+<span class="sd">    :shift_after (int):</span>
+<span class="sd">        If before the generation of the column we must shift it (usefull if we don&#39;t have the acces of the column information at the given day, only before) (optional - default: 1)</span>
+<span class="sd">    :statistic (str):</span>
+<span class="sd">        The statistic to be computed. Values allowed are: </span>
+
+<span class="sd">        * &quot;count_zero&quot;: counting the number of zeros</span>
+
+<span class="sd">        * &quot;freq_zero&quot;: the frequency of zeros </span>
+
+<span class="sd">        * any pandas rolling statistic (&quot;mean&quot;,&quot;sum&quot;, ... ) </span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">                &quot;id&quot;: &quot;d09&quot;,</span>
+<span class="sd">                &quot;enabled&quot;: true,</span>
+<span class="sd">                &quot;step_name&quot;: &quot;RollingFeatures&quot;,</span>
+<span class="sd">                &quot;params&quot;: {</span>
+<span class="sd">                    &quot;rolling_features&quot;: [</span>
+<span class="sd">                        {</span>
+<span class="sd">                            &quot;dataset_name&quot;: &quot;related&quot;,</span>
+<span class="sd">                            &quot;windows&quot;: [</span>
+<span class="sd">                                7,</span>
+<span class="sd">                                14,</span>
+<span class="sd">                                21,</span>
+<span class="sd">                                56</span>
+<span class="sd">                            ],</span>
+<span class="sd">                            &quot;statistic&quot;: &quot;mean&quot;,</span>
+<span class="sd">                            &quot;shift_after&quot;: 7,</span>
+<span class="sd">                            &quot;column&quot;: &quot;demand&quot;,</span>
+<span class="sd">                            &quot;data_source_name&quot;: &quot;target&quot;</span>
+<span class="sd">                        }</span>
+<span class="sd">                }</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    
+    
+    <span class="nd">@profile</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span><span class="n">MLModelObject</span><span class="p">):</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting rolling features transformer&#39;</span><span class="p">)</span>
+
+        <span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_params</span><span class="p">()</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">]</span>
+        <span class="n">key_cols</span> <span class="o">=</span> <span class="n">dimensions</span> <span class="o">+</span><span class="p">[</span><span class="n">when</span><span class="p">]</span>
+        <span class="n">drop_column</span> <span class="o">=</span> <span class="kc">False</span>
+         
+        <span class="n">max_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">)</span>
+
+        
+        <span class="c1">#Features</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">params_</span><span class="p">[</span><span class="s1">&#39;rolling_features&#39;</span><span class="p">]:</span>
+            <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataset_name&#39;</span><span class="p">,</span><span class="s1">&#39;related&#39;</span><span class="p">)</span>
+            <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span>
+            <span class="n">windows</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;windows&#39;</span><span class="p">]</span>
+            <span class="n">statistic</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;statistic&#39;</span><span class="p">]</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="n">step</span><span class="p">[</span><span class="s1">&#39;column&#39;</span><span class="p">]</span>
+            <span class="n">data_source_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_source_name&#39;</span><span class="p">,</span><span class="s1">&#39;related&#39;</span><span class="p">)</span>
+            <span class="n">shift_before</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shift_before&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">shift_after</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shift_after&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">drop_column</span> <span class="o">=</span>  <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;drop_column&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">encoded</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;encoded&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+            
+            <span class="n">_columns</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">encoded</span><span class="p">:</span>
+                <span class="n">encoding_relations</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;encoding_relations&#39;</span><span class="p">)</span>
+                <span class="n">_columns</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">encoding_relations</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">data_source_name</span> <span class="o">!=</span> <span class="n">dataset_name</span><span class="p">:</span>
+                <span class="n">source_data</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_source_name</span><span class="p">)</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">source_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">key_cols</span> <span class="o">+</span> <span class="p">[</span><span class="n">column</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span> <span class="o">=</span> <span class="n">key_cols</span><span class="p">),</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span><span class="n">on</span> <span class="o">=</span> <span class="n">key_cols</span><span class="p">)</span>
+                <span class="n">drop_column</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="k">if</span> <span class="n">dataset_type</span> <span class="o">==</span> <span class="s1">&#39;pandas&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">window_size</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">_columns</span><span class="p">:</span>
+                        <span class="n">new_col_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_rolling_&quot;</span><span class="o">+</span><span class="n">statistic</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">column</span>
+                        <span class="n">df</span><span class="p">[</span><span class="n">new_col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rolling_function</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">window_size</span><span class="p">),</span> <span class="n">statistic</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span><span class="n">shift_before</span><span class="p">)</span>
+                        <span class="c1"># df[new_col_name] = df.groupby([what,where]).bfill()[new_col_name]</span>
+                        <span class="k">if</span> <span class="n">shift_after</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">df</span><span class="p">[</span><span class="n">new_col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])[</span><span class="n">new_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">shift_after</span><span class="p">))</span><span class="o">.</span><span class="n">bfill</span><span class="p">()</span>
+                        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;aux&#39;</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">max_date</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">max_date</span><span class="p">,</span> <span class="n">new_col_name</span><span class="p">]</span> <span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">max_date</span><span class="p">,</span> <span class="n">new_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">drop_column</span><span class="p">:</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">column</span><span class="p">)</span>
+
+            
+            <span class="k">if</span> <span class="n">dataset_type</span> <span class="o">==</span> <span class="s1">&#39;pandas-on-spark&#39;</span><span class="p">:</span>
+                <span class="n">sdf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_spark</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">window_size</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="n">new_column_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_rolling_&quot;</span><span class="o">+</span><span class="n">statistic</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">column</span>
+                    <span class="n">window_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span>
+                    <span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">partitionBy</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="n">when</span><span class="p">)</span><span class="o">.</span><span class="n">rowsBetween</span><span class="p">(</span><span class="o">-</span><span class="n">window_size</span><span class="p">,</span><span class="o">-</span><span class="n">shift_before</span><span class="p">)</span>
+                    <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">new_column_name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span><span class="n">statistic</span><span class="p">)(</span><span class="n">func</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">column</span><span class="p">))</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">window</span><span class="p">))</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">fill</span><span class="p">({</span><span class="n">new_column_name</span><span class="p">:</span><span class="mi">0</span><span class="p">})</span>
+                    <span class="c1">#TODO shift after</span>
+                <span class="k">if</span> <span class="n">drop_column</span><span class="p">:</span>
+                    <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">to_pandas_on_spark</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">dataset_type</span> <span class="o">==</span> <span class="s1">&#39;pyspark&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">window_size</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="n">new_column_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_rolling_&quot;</span><span class="o">+</span><span class="n">statistic</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">column</span>
+                    <span class="n">window_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span>
+                    <span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">partitionBy</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="n">when</span><span class="p">)</span><span class="o">.</span><span class="n">rowsBetween</span><span class="p">(</span><span class="o">-</span><span class="n">window_size</span><span class="p">,</span><span class="o">-</span><span class="n">shift_before</span><span class="p">)</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">new_column_name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span><span class="n">statistic</span><span class="p">)(</span><span class="n">func</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">column</span><span class="p">))</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">window</span><span class="p">))</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">fill</span><span class="p">({</span><span class="n">new_column_name</span><span class="p">:</span><span class="mi">0</span><span class="p">})</span>
+                    <span class="c1">#TODO shift after</span>
+                <span class="k">if</span> <span class="n">drop_column</span><span class="p">:</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
+
+            <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mo</span></div>
+
+<span class="k">def</span> <span class="nf">rolling_function</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">statistic</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span><span class="n">shift_before</span><span class="p">):</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="n">when</span><span class="p">],</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift_before</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">statistic</span> <span class="o">==</span> <span class="s2">&quot;count_zero&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span> <span class="o">=</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">min_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()[[</span><span class="s1">&#39;aux&#39;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">statistic</span> <span class="o">==</span> <span class="s2">&quot;freq_zero&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span> <span class="o">=</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">min_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()[[</span><span class="s1">&#39;aux&#39;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">statistic</span> <span class="o">==</span> <span class="s2">&quot;median_skip_zero&quot;</span><span class="p">:</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="s1">&#39;aux&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span> <span class="n">where</span><span class="p">])[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span> <span class="o">=</span> <span class="n">window_size</span><span class="p">,</span><span class="n">min_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">skipna</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()[[</span><span class="s1">&#39;aux&#39;</span><span class="p">]]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])[</span><span class="s1">&#39;aux&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span> <span class="o">=</span> <span class="n">window_size</span><span class="p">,</span> <span class="n">min_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">),</span><span class="n">statistic</span><span class="p">)()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()[[</span><span class="s1">&#39;aux&#39;</span><span class="p">]]</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

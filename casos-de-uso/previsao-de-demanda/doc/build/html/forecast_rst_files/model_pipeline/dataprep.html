@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataprep steps &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model steps" href="model.html" />
+    <link rel="prev" title="Input steps" href="input.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../model_pipeline.html">Model Pipeline</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="input.html">Input steps</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Dataprep steps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#preparation-steps">Preparation steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.aggregation">Aggregation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.data_prep_transformer">Data prep transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.data_processor">Data processor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.dataset_filter">Dataset filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.evaluator_loader">Evaluator Loader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.merge_features">Merge features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.missing_values_transformer">Missing values transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.supervised_prep_transformer">Prepare supervised transformer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#featurization-steps">Featurization steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.date_features_extractor">Date features extractor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.dummy_transformer">Dummy Transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.feature_encoder">Feature encoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.forward_looking_transformer">Forward looking tranformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.group_feature_transformer">Group Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.holidays">Holidays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.lag_feature_transformer">Lag feature transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.operation_between_columns">Operation Between Columns</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.rolling_window_transformer">Rolling window tranformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.stockout_transformer">Stockout transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.time_to_christmas_transformer">Time to chistmas transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-vpipe.steps.dataprep.featurization.working_day">Working day</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">Model steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../post_creation.html">Post Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../post_execution.html">Post Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluator.html">Evaluator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../model_pipeline.html">Model Pipeline</a> &raquo;</li>
+      <li>Dataprep steps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/forecast_rst_files/model_pipeline/dataprep.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="dataprep-steps">
+<h1>Dataprep steps<a class="headerlink" href="#dataprep-steps" title="Permalink to this headline"></a></h1>
+<section id="preparation-steps">
+<h2>Preparation steps<a class="headerlink" href="#preparation-steps" title="Permalink to this headline"></a></h2>
+<section id="module-vpipe.steps.dataprep.aggregation">
+<span id="aggregation"></span><h3>Aggregation<a class="headerlink" href="#module-vpipe.steps.dataprep.aggregation" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.aggregation.DateAggregator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.aggregation.</span></span><span class="sig-name descname"><span class="pre">DateAggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/aggregation.html#DateAggregator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.aggregation.DateAggregator" title="Permalink to this definition"></a></dt>
+<dd><p>Aggregate the dataset based on the frequency informed.</p>
+<p>If the aggregation informed is the same as the frequency of the data, aggregation can beused to aggregate two etries of the same date (e.g. two sales that happened in the same day)</p>
+<p>Aggregation can only increase the period (e.g. daily can become daily, weekly or monthly , but weekly cannot be trasnformed to daily)</p>
+<dl class="field-list">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Frequency (str)</dt>
+<dd class="field-even"><p>The frequecy to which perform the aggregation. Can be daily (“D”), weekly (“W”) or monthly (“M”) 
+If weekly, the first day of the week is considered being monday and the predictino of the entire week will be related  to this day of the week (mandatory)</p>
+</dd>
+<dt class="field-odd">Aggregations (dict)</dt>
+<dd class="field-odd"><p>A dictionary with the information of the columns to be aggreagted and how to perform the opperation.
+Each key of the dictionary correspond to the name of the column while the value of the column correspond to the statistic to be used in the aggregation</p>
+<p>The statistic can be</p>
+<ul class="simple">
+<li><p>mode</p></li>
+<li><p>any pandas agg statistic (“mean”,”sum”, … )</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d06&quot;</span><span class="p">,</span>
+<span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+<span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DateAggregator&quot;</span><span class="p">,</span>
+<span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;dataset_aggregations&quot;</span><span class="p">:</span> 
+        <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;aggregations&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;demand&quot;</span><span class="p">:</span> <span class="s2">&quot;sum&quot;</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.data_prep_transformer">
+<span id="data-prep-transformer"></span><h3>Data prep transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.data_prep_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.data_prep_transformer.DatePrep">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.data_prep_transformer.</span></span><span class="sig-name descname"><span class="pre">DatePrep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/data_prep_transformer.html#DatePrep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.data_prep_transformer.DatePrep" title="Permalink to this definition"></a></dt>
+<dd><p>The step is respondible for mainly three kinds of transformations:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Cutting the “target” dataset to only pick dates bigger than the start date informed in the parameters</p></li>
+<li><p>Fill the absent dates for the “target” dataset and others that are present in the “data_frequencies” discitonary in the parameters</p></li>
+<li><p>Create the related dataset based on the target dataset after the other trasnformations of the step, without considering the demand column.</p></li>
+</ul>
+<p>The related dataset is particularly important for grouping informatins other than the time series of the demand (e.g. calendar events, price, item group …)
+and is generally the basis for the supervised methods</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_size_or_start_date (str)</dt>
+<dd class="field-odd"><p>The first date to be considered in the target dataset, informations related to dates before the informed will not be considered (mandatory)</p>
+</dd>
+<dt class="field-even">Ref_date</dt>
+<dd class="field-even"><p>The reference date.
+If in training, ref date is the last date where  we have informatin about the target time series and the last day to be considered in training. 
+If in prediction is the last day where we have informatino and thus indicating that the next day should be the first for the pediction dataset. (mandatory)</p>
+</dd>
+<dt class="field-odd">Horizon (int)</dt>
+<dd class="field-odd"><p>The horizon that the model will be trained to predict (e.g. if horizon 12 and frequency “W” the model will be trained to predict 12 weeks to the futur) (mandatory)</p>
+</dd>
+<dt class="field-even">Frequency (str)</dt>
+<dd class="field-even"><p>The frequecy to which perform the aggregation (mandatory)</p>
+</dd>
+<dt class="field-odd">Prepare_relted_dataset (bool)</dt>
+<dd class="field-odd"><p>Wheter the related dataset must be created or not. If true, the related dataset is created based on the target dataset but without the demand information and with dates going from the target dataset start date until the target dataset end date plus the prediction horizon. (optional - default: false)</p>
+</dd>
+<dt class="field-even">Data_frequencies (dict)</dt>
+<dd class="field-even"><p>A frequency dictionary with the key being the dataset and the value the respective frequency. All datasets with frequency indicated will be transformed accordingly.</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d03&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DatePrep&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;dataset_size_or_start_date&quot;</span><span class="p">:</span> <span class="s2">&quot;2019-01-01&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;prepare_related_dataset&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="s2">&quot;$</span><span class="si">{create.horizon}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;$</span><span class="si">{create.frequency}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ref_date&quot;</span><span class="p">:</span> <span class="s2">&quot;$</span><span class="si">{ref_date}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;data_frequencies&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.dataprep.data_prep_transformer.DatePrep.transform" title="vpipe.steps.dataprep.data_prep_transformer.DatePrep.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(mo)</p></td>
+<td><p>Make the trasnformations for the step and step the env_vars accordingly.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fill_absent_date</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>prepare_related</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.data_prep_transformer.DatePrep.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/data_prep_transformer.html#DatePrep.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.data_prep_transformer.DatePrep.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Make the trasnformations for the step and step the env_vars accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>mo.env_var: dict</dt><dd><dl class="field-list simple">
+<dt class="field-odd">data_frequencies</dt>
+<dd class="field-odd"><p>A frequency dictionary with the key being the dataset and the value the respective frequency</p>
+</dd>
+<dt class="field-even">ref_date</dt>
+<dd class="field-even"><p>The reference date for the run. 
+If in training, ref date is the last date where  we have informatin about the target time series and the last day to be considered in training. 
+If in prediction is the last day where we have informatino and thus indicating that the next day should be the first for the pediction dataset.</p>
+</dd>
+<dt class="field-odd">target_from_date</dt>
+<dd class="field-odd"><p>The first date to be conosidered in the target dataset</p>
+</dd>
+<dt class="field-even">target_from_date</dt>
+<dd class="field-even"><p>The last date present in the target dataset</p>
+</dd>
+<dt class="field-odd">related_from_date</dt>
+<dd class="field-odd"><p>The first date to be considered in the related dataset (if present)</p>
+</dd>
+<dt class="field-even">related_to_date</dt>
+<dd class="field-even"><p>The last date to be considered in the related dataset (if present)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.data_processor">
+<span id="data-processor"></span><h3>Data processor<a class="headerlink" href="#module-vpipe.steps.dataprep.data_processor" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.data_processor.DataProcessor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.data_processor.</span></span><span class="sig-name descname"><span class="pre">DataProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/data_processor.html#DataProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.data_processor.DataProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Based on the Simple MLDTA Processor present on vbrainer, this step can perform strip, trim, drop, fillna with zero operations. Missing Values step can also be used to fill absent values in more robust ways.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset where to perfomr the operation (mandatory)</p>
+</dd>
+<dt class="field-even">Column (str)</dt>
+<dd class="field-even"><p>The column where the transformation should be applied (mandatory)</p>
+</dd>
+<dt class="field-odd">Processing (list)</dt>
+<dd class="field-odd"><p>A list containing all the processing that should be performed can be: strip, trim, fillna and drop</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DataProcessor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;processing_steps&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;item_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;processing&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;strip&quot;</span>
+                <span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>trunc_outliers</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.dataset_filter">
+<span id="dataset-filter"></span><h3>Dataset filter<a class="headerlink" href="#module-vpipe.steps.dataprep.dataset_filter" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.dataset_filter.DataFilter">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.dataset_filter.</span></span><span class="sig-name descname"><span class="pre">DataFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/dataset_filter.html#DataFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.dataset_filter.DataFilter" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Filter the values indicated in the list in the parameters. When filter, all values that are not present in the list are discarded. </dt><dd><p>The values will be filtered in all datasets where the respective column is present.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Data_filters (dict)</dt>
+<dd class="field-odd"><p>Dictionary indicating the values to be filtered. The keys of the dictionary are the columns to be considered in the filter, while the values are the values to be maintained in the dataset. (mandatory)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d02&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DataFilter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;data_filters&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;item_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;location_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.evaluator_loader">
+<span id="evaluator-loader"></span><h3>Evaluator Loader<a class="headerlink" href="#module-vpipe.steps.dataprep.evaluator_loader" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.evaluator_loader.DataProcessor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.evaluator_loader.</span></span><span class="sig-name descname"><span class="pre">DataProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/evaluator_loader.html#DataProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.evaluator_loader.DataProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Load a model already trained and apply a transform with it. For this it uses the vflow client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Model_name (str)</dt>
+<dd class="field-odd"><p>The name of the model trained that will be loaded (mandatory)</p>
+</dd>
+<dt class="field-even">Model_version (int)</dt>
+<dd class="field-even"><p>The version of the model trained that will be loaded (mandatory)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d02&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DataFilter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;data_filters&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.merge_features">
+<span id="merge-features"></span><h3>Merge features<a class="headerlink" href="#module-vpipe.steps.dataprep.merge_features" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.merge_features.MergeFeatures">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.merge_features.</span></span><span class="sig-name descname"><span class="pre">MergeFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/merge_features.html#MergeFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.merge_features.MergeFeatures" title="Permalink to this definition"></a></dt>
+<dd><p>Step for merging features from different datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Data_source (str)</dt>
+<dd class="field-odd"><p>The data from where the features to be merge come from (mandatory)</p>
+</dd>
+<dt class="field-even">Key_columns (list)</dt>
+<dd class="field-even"><p>The columns that will be used as key in the merge (mandatory)</p>
+</dd>
+<dt class="field-odd">Features (list)</dt>
+<dd class="field-odd"><p>The feature columns that will be merged (mandatory)</p>
+</dd>
+<dt class="field-even">Destination_datasets (list)</dt>
+<dd class="field-even"><p>The datasets where the features should be merged (mandatory)</p>
+</dd>
+<dt class="field-odd">Forward_looking (true)</dt>
+<dd class="field-odd"><p>if we have this information in the future (mandatory)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d04&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;MergeFeatures&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;joining_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;data_source&quot;</span><span class="p">:</span> <span class="s2">&quot;sales&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;key_columns&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;item_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;average_price&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;destination_datasets&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;related&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;forward_looking&quot;</span><span class="p">:</span> <span class="n">true</span>
+            <span class="p">},</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.missing_values_transformer">
+<span id="missing-values-transformer"></span><h3>Missing values transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.missing_values_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.missing_values_transformer.MissingValueFiller">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.missing_values_transformer.</span></span><span class="sig-name descname"><span class="pre">MissingValueFiller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/missing_values_transformer.html#MissingValueFiller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.missing_values_transformer.MissingValueFiller" title="Permalink to this definition"></a></dt>
+<dd><p>Step for filling missing values.</p>
+<dl class="field-list">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset where the column to be filled is present (mandatory)</p>
+</dd>
+<dt class="field-even">Column_header (list)</dt>
+<dd class="field-even"><p>The name of the column (mandatory)</p>
+</dd>
+<dt class="field-odd">Forward_fill (str)</dt>
+<dd class="field-odd"><p>How the last values will be filled (values that don’t have a value for dates bigger than its own). Possible values are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ffill/last: use the last value of the column as filling value</p></li>
+<li><p>zero: fill with zeros</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt class="field-even">Backward_fill (str)</dt>
+<dd class="field-even"><p>How the first values will be filled (values that don’t have a value for dates smaller than its own). Possible values are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>bfill/first: use the first value of the column as filling value</p></li>
+<li><p>zero: fill with zeros</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt class="field-odd">Middle_fill (true)</dt>
+<dd class="field-odd"><p>How the values in that have a value not missing for dates bigger and smaller than its own will be filled (values the are in middle of two non missing values). Possible values are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ffill: use the last value before the absent as filling value</p></li>
+<li><p>bfill: use the first value after the absent as filling value</p></li>
+<li><p>zero: fill with zeros</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d05&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;MissingValueFiller&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;missing_values&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;column_header&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;forward_looking&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+                <span class="s2">&quot;forward_fill&quot;</span><span class="p">:</span> <span class="s2">&quot;zero&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;middle_fill&quot;</span><span class="p">:</span> <span class="s2">&quot;zero&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;backward_fill&quot;</span><span class="p">:</span> <span class="s2">&quot;zero&quot;</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.supervised_prep_transformer">
+<span id="prepare-supervised-transformer"></span><h3>Prepare supervised transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.supervised_prep_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.supervised_prep_transformer.SupervisedPrep">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.supervised_prep_transformer.</span></span><span class="sig-name descname"><span class="pre">SupervisedPrep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/supervised_prep_transformer.html#SupervisedPrep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.supervised_prep_transformer.SupervisedPrep" title="Permalink to this definition"></a></dt>
+<dd><p>Step responsible for creating the datasets necessary for the all models that are based on a supervised learing strategy.</p>
+<p>Creates two dataset: “supervised_dataset” and “supervised_target”. Sets the prediction strategy: “direct” or “recursive”.</p>
+<dl class="field-list">
+<dt class="field-odd">Prediction_strategy (str)</dt>
+<dd class="field-odd"><p>The prediction strategy that will be used in the supervised learning (mandatory):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“recursive”: Only one model created, based on the fetaures for one date predicts the demand for this date. Lags and rolling window should be used with attention with this strategy, as we don’t have informatino of the target for future dates</p></li>
+<li><p>“direct”: A model is created for each future step (one model for demand+1, one for demand+2, …)</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt class="field-even">Target (dict)</dt>
+<dd class="field-even"><p>A dictionary about the target for the supervised learning strategy. The keys for this dictionary are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“dataset_name”: the dataset that contains the column that will be used as a target for the model (optional - default: “target”)</p></li>
+<li><p>“column”: the column that will be used as target for the model (optional - default: “demand”)</p></li>
+<li><p>“horizon”: the horizon that the model will be trained for predict (mandatory)</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt class="field-odd">Features (dict)</dt>
+<dd class="field-odd"><p>A dictionary about the features dataset for the supervised learning strategy. The keys for this dictionary are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“dataset_name”: the dataset that contains the features that will be used  for the model (optional - default: “related”)</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d12&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;SupervisedPrep&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;prediction_strategy&quot;</span><span class="p">:</span> <span class="s2">&quot;recursive&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="s2">&quot;$</span><span class="si">{create.horizon}</span><span class="s2">&quot;</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+</section>
+<section id="featurization-steps">
+<h2>Featurization steps<a class="headerlink" href="#featurization-steps" title="Permalink to this headline"></a></h2>
+<section id="module-vpipe.steps.dataprep.featurization.date_features_extractor">
+<span id="date-features-extractor"></span><h3>Date features extractor<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.date_features_extractor" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.date_features_extractor.DateFeaturesExtractor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.date_features_extractor.</span></span><span class="sig-name descname"><span class="pre">DateFeaturesExtractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/date_features_extractor.html#DateFeaturesExtractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.date_features_extractor.DateFeaturesExtractor" title="Permalink to this definition"></a></dt>
+<dd><p>Extract date features. Each feature will be putted in a column with the date feature as header (month, week of year, …)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Features (list)</dt>
+<dd class="field-even"><p>One of the folowing: <em>‘day’</em>, <em>‘month’</em>, <em>‘year’</em>, <em>‘weekday’</em>, <em>‘quarter’</em>, <em>‘dayofyear’</em>, <em>‘weekofyear’</em> (mandatory)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d07&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DateFeatures&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;date_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;weekofyear&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;month&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;year&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;weekday&quot;</span>
+                <span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.dummy_transformer">
+<span id="dummy-transformer"></span><h3>Dummy Transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.dummy_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.dummy_transformer.DummyAdjustmentTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.dummy_transformer.</span></span><span class="sig-name descname"><span class="pre">DummyAdjustmentTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/dummy_transformer.html#DummyAdjustmentTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.dummy_transformer.DummyAdjustmentTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Transform one column into another based on a condition that can be refered to another column. No column is created the transformation occurs in the same column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Condition_data_source__name (str)</dt>
+<dd class="field-even"><p>The dataset in which the column that the condition will be aplied is present (optional - default: “related”)</p>
+</dd>
+<dt class="field-odd">Column_name (str)</dt>
+<dd class="field-odd"><p>The column to be transformed (mandatory)</p>
+</dd>
+<dt class="field-even">Condition_column (str)</dt>
+<dd class="field-even"><p>The column where the condition will be applied. (mandatory)</p>
+</dd>
+<dt class="field-odd">Encoded (bool)</dt>
+<dd class="field-odd"><p>If the column that the transformation will be applied was transformed or not (optional - default: false)</p>
+</dd>
+<dt class="field-even">Rules (list)</dt>
+<dd class="field-even"><p>A list of dictionaries with two mandatory keys</p>
+<dl class="field-list simple">
+<dt class="field-odd">condition (str)</dt>
+<dd class="field-odd"><p>Which condition will be verified, possible: “==0”,”!=0”,”&gt;0”,”&gt;=0”,”&lt;0”,”&lt;=0”</p>
+</dd>
+<dt class="field-even">value (float)</dt>
+<dd class="field-even"><p>The value to be inserted in the column where the consition is satisfied</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d07&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;DummyAdjustment&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;dummy_adjustment&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;condition_data_source_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;column_name&quot;</span><span class="p">:</span> <span class="s2">&quot;foo&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;condition_column&quot;</span><span class="p">:</span> <span class="s2">&quot;bar&quot;</span>
+                <span class="s2">&quot;encoded&quot;</span><span class="p">:</span> <span class="n">false</span>
+                <span class="s2">&quot;rules&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;condition&quot;</span><span class="p">:</span><span class="s2">&quot;==0&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="mi">1</span>
+                    <span class="p">}</span>
+                <span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.feature_encoder">
+<span id="feature-encoder"></span><h3>Feature encoder<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.feature_encoder" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.feature_encoder.</span></span><span class="sig-name descname"><span class="pre">FeatureEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/feature_encoder.html#FeatureEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder" title="Permalink to this definition"></a></dt>
+<dd><p>Encoding features based on one of three transformations: dummy, integer, mean.
+* If <strong>dummy enconding</strong> is used, for each value “v” in a colum “x” a new column named “x_v” is created. The column will have value one where the element appeared in the original column.
+* If <strong>integer encoding</strong> is used, for the column “x” a column named “x_integer” is created. For each value an integer is assigned starting from zero and increasing. If a new vlue is encountered will receive the next integer avaiable value. 
+* If <strong>mean encoding</strong> is used, for the column “x” a column named “x_mean” is created. For each value the mean of the target variable that has this value is assigned to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Column (str)</dt>
+<dd class="field-even"><p>The column to be transformed (mandatory)</p>
+</dd>
+<dt class="field-odd">Encoding (str)</dt>
+<dd class="field-odd"><p>The encoding to be applied. Can be: ‘integer’, ‘dummy’, ‘mean’ (mandatory)</p>
+</dd>
+<dt class="field-even">Drop_column (bool)</dt>
+<dd class="field-even"><p>If the original column must be dropped after the encoding (optional - default: false)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d10&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;FeatureEncoder&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;encoding_step&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;drop_column: false</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.fit" title="vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(mo[, y])</p></td>
+<td><p>Fit the encoder for the column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.transform" title="vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(mo)</p></td>
+<td><p>Apply the self encoders saved during fit</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/feature_encoder.html#FeatureEncoder.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit the encoder for the column</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>self.encoders: dict</dt><dd><p>A dictionary that has as key (dataset_name, column, encoding, drop_after) that indicate respectvely the dataset to be performed the transformation, the column, which encoding and if the column must be dropped after.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/feature_encoder.html#FeatureEncoder.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.feature_encoder.FeatureEncoder.transform" title="Permalink to this definition"></a></dt>
+<dd><p>Apply the self encoders saved during fit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>self.encoders: dict</strong></dt><dd><p>A dictionary that has as key (dataset_name, column, encoding, drop_after) that indicate respectvely the dataset to be performed the transformation, the column, which encoding and if the column must be dropped after.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>mo.env_vars: dict</dt><dd><p>A dictionary that has as key the column encoded and values the respective name of the new column.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.forward_looking_transformer">
+<span id="forward-looking-tranformer"></span><h3>Forward looking tranformer<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.forward_looking_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.forward_looking_transformer.FowardLookingTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.forward_looking_transformer.</span></span><span class="sig-name descname"><span class="pre">FowardLookingTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/forward_looking_transformer.html#FowardLookingTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.forward_looking_transformer.FowardLookingTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Acts like a rolling window for the future. Each column will be assign a name according to its transformation: <strong>“original +’_’+str(step*window_size)+’_forward_looking”</strong>.</p>
+<p>For instance appling a one period window for a steps of size 12 to the “foo” column, will produce 12 columns:  “foo_1_foward_looking”, “foo_2_foward_looking”, …, “foo_12_foward_looking”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Column (str)</dt>
+<dd class="field-even"><p>The column to be transformed (mandatory)</p>
+</dd>
+<dt class="field-odd">Steps (int)</dt>
+<dd class="field-odd"><p>How many times in the future the window will be applied (optional - default: 1)</p>
+</dd>
+<dt class="field-even">Window_size (int)</dt>
+<dd class="field-even"><p>The window size for which the statistic will be computed (optional - default: 1)</p>
+</dd>
+<dt class="field-odd">Encoded (bool)</dt>
+<dd class="field-odd"><p>If the column that the transformation will be applied was transformed or not (optional - default: false)</p>
+</dd>
+<dt class="field-even">Statistic (str)</dt>
+<dd class="field-even"><p>The statistic to be computed. Values allowed are:</p>
+<ul class="simple">
+<li><p>“count_zero”: counting the number of zeros</p></li>
+<li><p>“freq_zero”: the frequency of zeros</p></li>
+<li><p>any pandas rolling statistic (“mean”,”sum”, … )</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d10&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;FowardLooking&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;forward_looking_tranformer&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;steps&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+                <span class="s2">&quot;window_size&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;statistic&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;drop_column&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+                <span class="s2">&quot;encoded&quot;</span><span class="p">:</span> <span class="n">false</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.group_feature_transformer">
+<span id="group-features"></span><h3>Group Features<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.group_feature_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.group_feature_transformer.GroupFeaturesTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.group_feature_transformer.</span></span><span class="sig-name descname"><span class="pre">GroupFeaturesTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/group_feature_transformer.html#GroupFeaturesTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.group_feature_transformer.GroupFeaturesTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Group a column based on other columns. If a column “x” is grouped by “a” and “b”, then a column named <em>“x_by_a_b”</em> is created</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the group is present applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Dataset_source_name (str)</dt>
+<dd class="field-even"><p>The dataset in which the column to be grouped is present (optional - default: “related”)</p>
+</dd>
+<dt class="field-odd">Column (str)</dt>
+<dd class="field-odd"><p>The column to be grouped (mandatory)</p>
+</dd>
+<dt class="field-even">Group (str)</dt>
+<dd class="field-even"><p>The group (mandatory)</p>
+</dd>
+<dt class="field-odd">Statistic (str)</dt>
+<dd class="field-odd"><p>The statistic to be computed in the groupby. Values allowed are:</p>
+<ul class="simple">
+<li><p>any pandas groupby statistic (“mean”,”sum”, … )</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d07&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;GroupFeatures&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;group_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;dataset_source_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;date&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;location_id&quot;</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;statistic&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.holidays">
+<span id="holidays"></span><h3>Holidays<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.holidays" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.holidays.Holidays">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.holidays.</span></span><span class="sig-name descname"><span class="pre">Holidays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/holidays.html#Holidays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.holidays.Holidays" title="Permalink to this definition"></a></dt>
+<dd><p>Class that puts holidays columns in your model object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">City (str)</dt>
+<dd class="field-odd"><p>The city that you want to get the holidays</p>
+</dd>
+<dt class="field-even">State (str)</dt>
+<dd class="field-even"><p>The state that you want to get the holidays</p>
+</dd>
+<dt class="field-odd">Holiday_types (str or list)</dt>
+<dd class="field-odd"><p>Type of holiday</p>
+<dl class="field-list simple">
+<dt class="field-odd">optional</dt>
+<dd class="field-odd"><p>Insert optional holidays such as Teacher’s Day in Brazil</p>
+</dd>
+<dt class="field-even">holiday</dt>
+<dd class="field-even"><p>Insert not optional holidays such as Christmas</p>
+</dd>
+<dt class="field-odd">special</dt>
+<dd class="field-odd"><p>Insert special days such as Mother’s Day or Black Friday</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Coverage (str or list)</dt>
+<dd class="field-even"><p>The coverage of the holiday: <em>‘national’</em>, <em>‘state’</em>, <em>‘municipal’</em></p>
+</dd>
+<dt class="field-odd">Column_by_type (bool)</dt>
+<dd class="field-odd"><p>If true, for each holiday type will get a column in the datarame, that is, the models will treat them as different variables</p>
+</dd>
+<dt class="field-even">Eve_column (bool)</dt>
+<dd class="field-even"><p>If true, an <em>‘eve_’</em> + {holiday_type} will be concatenated in the dataframe</p>
+</dd>
+<dt class="field-odd">Days_of_week_to_drop (list)</dt>
+<dd class="field-odd"><p>A list of days of week that you don’t want to consider the holidays in that days.</p>
+</dd>
+<dt class="field-even">Holidays_to_drop (list)</dt>
+<dd class="field-even"><p>A list of holidays that you don’t want to consider</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="c1"># on dataprep_config, use the parameters above</span>
+
+    <span class="s2">&quot;featurization&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;holidays&quot;</span><span class="p">{</span>
+            <span class="n">city</span> <span class="p">:</span>  <span class="s1">&#39;rio de janeiro&#39;</span>            
+            <span class="n">state</span> <span class="p">:</span> <span class="s1">&#39;RJ&#39;</span>                        
+            <span class="n">holiday_types</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;special&#39;</span><span class="p">,</span> <span class="s1">&#39;holiday&#39;</span><span class="p">]</span>            
+            <span class="n">coverage</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;municipal&#39;</span><span class="p">,</span> <span class="s1">&#39;national&#39;</span><span class="p">]</span>                    
+            <span class="n">column_by_type</span> <span class="p">:</span> <span class="n">true</span>               
+            <span class="n">eve_column</span> <span class="p">:</span> <span class="n">true</span>                       
+            <span class="n">days_of_week_to_drop</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;monday&#39;</span><span class="p">,</span> <span class="s1">&#39;sunday&#39;</span><span class="p">]</span>
+            <span class="n">holidays_to_drop</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Natal&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 76%" />
+<col style="width: 24%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>create_holiday_by_rule</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>create_new_yearly_holiday_df</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>gen_special_days</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_bool_holiday</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_holiday_coverage</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_holidays_by_city</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.lag_feature_transformer">
+<span id="lag-feature-transformer"></span><h3>Lag feature transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.lag_feature_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.lag_feature_transformer.LagFeaturesTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.lag_feature_transformer.</span></span><span class="sig-name descname"><span class="pre">LagFeaturesTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/lag_feature_transformer.html#LagFeaturesTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.lag_feature_transformer.LagFeaturesTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Create a lag of a specific column.</p>
+<p>As an example,if a lag of 3 applied to a column x a new column “x_3_lag” is created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Dataset_source_name (str)</dt>
+<dd class="field-even"><p>The dataset in which the column to be trasnform is present (optional - default: “related”)</p>
+</dd>
+<dt class="field-odd">Column (str)</dt>
+<dd class="field-odd"><p>The column to be transformed (mandatory)</p>
+</dd>
+<dt class="field-even">Lags (list)</dt>
+<dd class="field-even"><p>A list contining the lags to be computed of the indicated column</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d08&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;LagFeatures&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;lag_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;lags&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="mi">7</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;data_source_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span>
+            <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.operation_between_columns">
+<span id="operation-between-columns"></span><h3>Operation Between Columns<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.operation_between_columns" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.operation_between_columns.OperationBetweenColumns">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.operation_between_columns.</span></span><span class="sig-name descname"><span class="pre">OperationBetweenColumns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/operation_between_columns.html#OperationBetweenColumns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.operation_between_columns.OperationBetweenColumns" title="Permalink to this definition"></a></dt>
+<dd><p>Operation between two different columns.</p>
+<p>As an example, for a division between a and b, a new column created will receive the name <em>“a_/_b”</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">First_dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied and contains the first column (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">First_dataset_name (str)</dt>
+<dd class="field-even"><p>The dataset that contains the second column (optional - default: “related”)</p>
+</dd>
+<dt class="field-odd">First_column (str)</dt>
+<dd class="field-odd"><p>The column that will appear first in the operation (mandatory)</p>
+</dd>
+<dt class="field-even">Second_column (str)</dt>
+<dd class="field-even"><p>The column that will appear second in the operation (mandatory)</p>
+</dd>
+<dt class="field-odd">Operation (str)</dt>
+<dd class="field-odd"><p>The type of operation to be performed between columns</p>
+<ul class="simple">
+<li><p>arithmetic operations (“/”, “*”, “+”, “-“)</p></li>
+<li><p>comparison operations (“&gt;”, “&gt;=”, “&lt;”, “&lt;=”, “==”)</p></li>
+<li><p>relative differrence with respect to the secons column (“-relative”)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d09&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;OperationBetweenColumns&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;operations_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;first_dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;first_column&quot;</span><span class="p">:</span> <span class="s2">&quot;average_price&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;second_dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;second_column&quot;</span><span class="p">:</span> <span class="s2">&quot;56_rolling_mean_average_price&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;operation&quot;</span><span class="p">:</span> <span class="s2">&quot;-relative&quot;</span>
+            <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.rolling_window_transformer">
+<span id="rolling-window-tranformer"></span><h3>Rolling window tranformer<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.rolling_window_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.rolling_window_transformer.RollingWindowTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.rolling_window_transformer.</span></span><span class="sig-name descname"><span class="pre">RollingWindowTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/rolling_window_transformer.html#RollingWindowTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.rolling_window_transformer.RollingWindowTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Compute statistics for a rolling window, generating columns named accordingly. 
+Each column will be assign a name according to its transformation: <strong>“window_size + “_rolling_”+ statistic + column”</strong>.</p>
+<p>For instance appling a rolling window, with size 36 and “mean” as statistic, for the column “foo” will produce the column:  “36_rolling_mean_foo”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Column (str)</dt>
+<dd class="field-even"><p>The column to be transformed (mandatory)</p>
+</dd>
+<dt class="field-odd">Data_source_name (str)</dt>
+<dd class="field-odd"><p>The dataset name where the column to be transformed is present (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Windows (int)</dt>
+<dd class="field-even"><p>Windows size to be applied (mandatory)</p>
+</dd>
+<dt class="field-odd">Drop_column (bool)</dt>
+<dd class="field-odd"><p>If the original column must be dropped after the encoding (optional - default: false)</p>
+</dd>
+<dt class="field-even">Encoded (bool)</dt>
+<dd class="field-even"><p>If the column that the transformation will be applied was transformed or not (optional - default: false)</p>
+</dd>
+<dt class="field-odd">Shift_after (int)</dt>
+<dd class="field-odd"><p>If after the generation of the column we must shift it (usefull for recursive modelling) (optional - default: None)</p>
+</dd>
+<dt class="field-even">Shift_after (int)</dt>
+<dd class="field-even"><p>If before the generation of the column we must shift it (usefull if we don’t have the acces of the column information at the given day, only before) (optional - default: 1)</p>
+</dd>
+<dt class="field-odd">Statistic (str)</dt>
+<dd class="field-odd"><p>The statistic to be computed. Values allowed are:</p>
+<ul class="simple">
+<li><p>“count_zero”: counting the number of zeros</p></li>
+<li><p>“freq_zero”: the frequency of zeros</p></li>
+<li><p>any pandas rolling statistic (“mean”,”sum”, … )</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d09&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;RollingFeatures&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;rolling_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;related&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;windows&quot;</span><span class="p">:</span> <span class="p">[</span>
+                        <span class="mi">7</span><span class="p">,</span>
+                        <span class="mi">14</span><span class="p">,</span>
+                        <span class="mi">21</span><span class="p">,</span>
+                        <span class="mi">56</span>
+                    <span class="p">],</span>
+                    <span class="s2">&quot;statistic&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;shift_after&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+                    <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;data_source_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.stockout_transformer">
+<span id="stockout-transformer"></span><h3>Stockout transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.stockout_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.stockout_transformer.StockoutTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.stockout_transformer.</span></span><span class="sig-name descname"><span class="pre">StockoutTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/stockout_transformer.html#StockoutTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.stockout_transformer.StockoutTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Tranformation that compute if there was stock avaiable or not based on a column information in the dataset. The column generated will be name stockout and will have the value <strong>1</strong> if we have stock and value <strong>0</strong> otherwise.</p>
+<p>Based on the quantile of the column indicated (ex: sales) it is calulated the days between two consecutive sales and when the space between two sales is bigger than the upper percentile by 1.5 times the space between the higher and the lower quantile, it is said that no stock was present during this period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (bool)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Target_dataset (str)</dt>
+<dd class="field-even"><p>The dataset in which the target column is present (optional - default: “target”)</p>
+</dd>
+<dt class="field-odd">Target_column (str)</dt>
+<dd class="field-odd"><p>The target column to be transformed (optional - default: “demand”)</p>
+</dd>
+<dt class="field-even">Lower_quantile (str)</dt>
+<dd class="field-even"><p>The lower quantile to be considered in the transformation (optional - default: “.25”)</p>
+</dd>
+<dt class="field-odd">Higher_quantile (int)</dt>
+<dd class="field-odd"><p>The higher quantile to be considered in the transformation (optional - default: “.75”)</p>
+</dd>
+<dt class="field-even">Min_periods (bool)</dt>
+<dd class="field-even"><p>min periods to count in the days between two periods and be avaiable to be considered as a stockout period (optional - default: 0)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d09&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Stockout&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;params&quot;</span><span class="p">:</span> 
+        <span class="p">{</span>
+            <span class="s2">&quot;target_dataset&quot;</span><span class="p">:</span> 
+            <span class="s2">&quot;target_column&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;lower_quantile&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+            <span class="s2">&quot;higher_quantile&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span>
+            <span class="s2">&quot;min_periods&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span>
+
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.time_to_christmas_transformer">
+<span id="time-to-chistmas-transformer"></span><h3>Time to chistmas transformer<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.time_to_christmas_transformer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.time_to_christmas_transformer.TimeToChristmasTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.time_to_christmas_transformer.</span></span><span class="sig-name descname"><span class="pre">TimeToChristmasTransformer</span></span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/time_to_christmas_transformer.html#TimeToChristmasTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.time_to_christmas_transformer.TimeToChristmasTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>For the christmas date a column is created with a countdown of 30 days untill chirstmas (starting with zero and growing untill 1 when the date is christmas)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d12&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;TimeToChristmas&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>set_dates</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>set_feature_name</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.dataprep.featurization.working_day">
+<span id="working-day"></span><h3>Working day<a class="headerlink" href="#module-vpipe.steps.dataprep.featurization.working_day" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.dataprep.featurization.working_day.WorkingDayTransformer">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.dataprep.featurization.working_day.</span></span><span class="sig-name descname"><span class="pre">WorkingDayTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/dataprep/featurization/working_day.html#WorkingDayTransformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.dataprep.featurization.working_day.WorkingDayTransformer" title="Permalink to this definition"></a></dt>
+<dd><p>Transformation to compute if a day in the datset was a working day or not. Can be subscribed by a working day dataset with the ground truth information bout the days that were working day or not.</p>
+<p>A day is considered not working day in this transformation if a location had zero sales in a given day.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The dataset in which the transformation will be applied (optional - default: “related”)</p>
+</dd>
+<dt class="field-even">Ticket_dataset (str)</dt>
+<dd class="field-even"><p>The data set that contain the column with the considered sales information (optional - default: “related”)</p>
+</dd>
+<dt class="field-odd">Ticket_column (str)</dt>
+<dd class="field-odd"><p>The column to be considered as the sales column (optional - default: “sales”)</p>
+</dd>
+<dt class="field-even">Working_day_dataset (str)</dt>
+<dd class="field-even"><p>Eventual working day dataset to subscribe the working day column generated (optional - default: “working_day”)</p>
+</dd>
+<dt class="field-odd">Working_day_column (str)</dt>
+<dd class="field-odd"><p>Name of the working day column in the eventual working day dataset generated(optional - default: false)</p>
+</dd>
+<dt class="field-even">Default_value (str)</dt>
+<dd class="field-even"><p>If the default value is “open”, when creating the information for the future will be considered a working day (optional - default: open)</p>
+</dd>
+<dt class="field-odd">Forward_looking (bool)</dt>
+<dd class="field-odd"><p>If we have the information about the fututre working_days (if False than the column will have nan values to dates in the future of the reference date) (optional - default: None)</p>
+</dd>
+<dt class="field-even">Overwrite_past_observations (bool)</dt>
+<dd class="field-even"><p>If past observatinos must be overwitten with the eventual dataset ássed (optional - default: None)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;d10&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;WorkingDay&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;working_day&quot;</span>
+        <span class="s2">&quot;ticket_dataset&quot;</span><span class="p">:</span> <span class="s2">&quot;sales&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ticket_column&quot;</span><span class="p">:</span> <span class="s2">&quot;revenue&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;working_day_dataset&quot;</span><span class="p">:</span> <span class="s2">&quot;working_day&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;working_day_column&quot;</span><span class="p">:</span> <span class="s2">&quot;working_day&quot;</span>
+        <span class="s2">&quot;default_value&quot;</span><span class="p">:</span> <span class="s2">&quot;working_day&quot;</span>
+        <span class="s2">&quot;forward_looking&quot;</span><span class="p">:</span> <span class="n">true</span>
+        <span class="s2">&quot;overwrite_past_observatinos&quot;</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="input.html" class="btn btn-neutral float-left" title="Input steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="model.html" class="btn btn-neutral float-right" title="Model steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

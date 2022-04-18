@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.models.dummy &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.models.dummy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.models.dummy</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">dateutil.relativedelta</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+
+
+<div class="viewcode-block" id="DummyEstimator"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.dummy.DummyEstimator">[docs]</a><span class="k">class</span> <span class="nc">DummyEstimator</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Predict 1 for all future values. </span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">    </span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;:&quot;h01&quot;,</span>
+<span class="sd">            &quot;enabled&quot;:true,</span>
+<span class="sd">            &quot;step_name&quot;:&quot;DummyModel&quot;,</span>
+<span class="sd">            &quot;params&quot;:{</span>
+<span class="sd">                &quot;horizon&quot;: 7,         # prediction horizon - mandatory</span>
+<span class="sd">                &quot;frequency&quot;: &quot;W&quot;,      # forecast frequency - mandatory </span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">AbstractVBrainStep</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+
+<div class="viewcode-block" id="DummyEstimator.fit"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.dummy.DummyEstimator.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span>  <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set horizon and frequency</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hiperparams</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">if</span> <span class="n">hiperparams</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;frequency&#39;</span> <span class="ow">in</span> <span class="n">hiperparams</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">hiperparams</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;horizon&#39;</span> <span class="ow">in</span> <span class="n">hiperparams</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span> <span class="o">=</span> <span class="n">hiperparams</span><span class="p">[</span><span class="s1">&#39;horizon&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="DummyEstimator.predict"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.dummy.DummyEstimator.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set 1 for future values </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_dataset_type</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+        <span class="c1"># if dataset_type == &#39;pyspark&#39;:</span>
+        <span class="c1">#df = X.convert_dataset_name(&#39;target&#39;, &#39;pandas&#39;)</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     df = X.get_dataset(&#39;target&#39;)</span>
+
+        <span class="n">execution_config</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_execution_config</span><span class="p">()</span>
+
+        <span class="n">frequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span>
+        <span class="n">horizon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span>
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">execution_config</span><span class="p">[</span><span class="s1">&#39;ref_date&#39;</span><span class="p">],</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span> <span class="n">where</span><span class="p">]]</span>
+
+        <span class="n">multi_days</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">frequency</span> <span class="o">==</span><span class="s2">&quot;W&quot;</span><span class="p">:</span>
+            <span class="n">multi_days</span> <span class="o">=</span> <span class="mi">7</span>
+        <span class="n">ndays</span> <span class="o">=</span> <span class="n">horizon</span>
+        <span class="k">if</span> <span class="n">frequency</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+            <span class="n">ndays</span> <span class="o">=</span> <span class="n">horizon</span>
+        <span class="k">elif</span> <span class="n">frequency</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;W&#39;</span><span class="p">):</span>
+            <span class="n">ndays</span> <span class="o">=</span> <span class="n">horizon</span><span class="o">*</span><span class="mi">7</span>
+        <span class="k">elif</span> <span class="n">frequency</span> <span class="o">==</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span>
+            <span class="n">to_date</span> <span class="o">=</span> <span class="n">ref_date</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span> <span class="o">=</span> <span class="n">horizon</span><span class="p">)</span>
+            <span class="n">ndays</span> <span class="o">=</span> <span class="p">(</span><span class="n">to_date</span> <span class="o">-</span> <span class="n">ref_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">ref_date</span><span class="o">-</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="n">ndays</span><span class="p">)))]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;prediction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">dimensions</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;prediction&#39;</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">cols</span><span class="p">]</span>
+
+        <span class="n">X</span><span class="o">.</span><span class="n">add_to_output_data</span><span class="p">(</span><span class="s1">&#39;prediction&#39;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

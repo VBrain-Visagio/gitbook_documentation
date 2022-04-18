@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.models.moving_average &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.models.moving_average</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.models.moving_average</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.ml_model_object</span> <span class="kn">import</span> <span class="n">MLModelObject</span>
+<span class="kn">from</span> <span class="nn">vpipe.utils.get_frequency_factor</span> <span class="kn">import</span> <span class="n">get_frequency_factor</span>
+
+<span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+<span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+<span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+<span class="n">demand</span> <span class="o">=</span> <span class="s1">&#39;demand&#39;</span>
+<span class="n">forecast</span> <span class="o">=</span> <span class="s1">&#39;prediction&#39;</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MovingAverage"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.moving_average.MovingAverage">[docs]</a><span class="k">class</span> <span class="nc">MovingAverage</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Fits a moving average</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        </span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;:&quot;h01&quot;,</span>
+<span class="sd">            &quot;enabled&quot;:true,</span>
+<span class="sd">            &quot;step_name&quot;:&quot;MovingAverage&quot;,</span>
+<span class="sd">            &quot;params&quot;:{</span>
+<span class="sd">                &quot;horizon&quot;: 7,         # prediction horizon - mandatory</span>
+<span class="sd">                &quot;frequency&quot;: &quot;W&quot;,      # forecast frequency - mandatory</span>
+<span class="sd">                &quot;lookback&quot;: 12        # defines the window size for which the moving avergae will be calculated - defaul: horizon</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    </span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MovingAverage.fit"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.moving_average.MovingAverage.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span>  <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Fit the moving average algorithm by calculating the mean for each item location pair, the mean is calculated based on a time window defined as the &quot;lookback&quot;. </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        self.mean_dictionary: dict</span>
+<span class="sd">            Dictionary with the pair item location as key and the historical mean as value  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting MM fit&quot;</span><span class="p">)</span>
+        <span class="n">hyperparams</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_params</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">hyperparams</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">]</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span> <span class="o">=</span> <span class="n">hyperparams</span><span class="p">[</span><span class="s1">&#39;horizon&#39;</span><span class="p">]</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">lookback</span> <span class="o">=</span> <span class="n">hyperparams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lookback&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">horizon</span><span class="p">)</span>
+
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">hyperparams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataset_name&#39;</span><span class="p">,</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">hyperparams</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;target_column&#39;</span><span class="p">,</span><span class="n">demand</span><span class="p">)</span>
+             
+        <span class="n">df</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="n">when</span><span class="p">,</span><span class="n">column</span><span class="p">]]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span><span class="p">[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="n">when</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">])[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="n">window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookback</span><span class="p">,</span> <span class="n">min_periods</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">==</span> <span class="n">df</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="s1">&#39;mean&#39;</span><span class="p">]]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">],</span><span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_disctionary</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="MovingAverage.predict"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.moving_average.MovingAverage.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span><span class="n">MLModelObject</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method that use the fitted models to make the prediction. As a supervised leanring class, the supervised prep step need to be part of the pipeline before the step. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mo.env_var : dict</span>
+
+<span class="sd">            :ref_date: Reference date for the forecast period</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mo.data_map : dict</span>
+
+<span class="sd">            :supervised_dataset: Pandas dataframe containing the forecast. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">#TODO verify the filters </span>
+
+        <span class="n">mean_dictionary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_disctionary</span>
+        <span class="n">frequency_factor</span> <span class="o">=</span> <span class="n">get_frequency_factor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">)</span>
+        <span class="n">horizon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">horizon</span>
+
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s2">&quot;ref_date&quot;</span><span class="p">)</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">ref_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">1</span><span class="p">),</span> <span class="n">end</span> <span class="o">=</span> <span class="n">ref_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">frequency_factor</span> <span class="p">:</span> <span class="n">horizon</span><span class="p">}),</span> <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">),</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        <span class="n">mean_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">mean_dictionary</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">dates</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">mean_df</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="n">pred_data</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">mean_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;key&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span> <span class="p">{</span><span class="s1">&#39;level_0&#39;</span><span class="p">:</span><span class="n">what</span><span class="p">,</span> <span class="s1">&#39;level_1&#39;</span><span class="p">:</span><span class="n">where</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span><span class="n">forecast</span><span class="p">})</span>
+        
+        <span class="n">pred_data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">pred_data</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">forecast</span><span class="p">,</span> <span class="n">pred_data</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">mo</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

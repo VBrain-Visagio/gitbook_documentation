@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.dataprep.data_prep_transformer &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.dataprep.data_prep_transformer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.dataprep.data_prep_transformer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.ml_model_object</span> <span class="kn">import</span> <span class="n">MLModelObject</span>
+<span class="kn">import</span> <span class="nn">vflow</span>
+<span class="kn">from</span> <span class="nn">dateutil.relativedelta</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+<span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+<span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+
+<div class="viewcode-block" id="DatePrep"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.data_prep_transformer.DatePrep">[docs]</a><span class="k">class</span> <span class="nc">DatePrep</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The step is respondible for mainly three kinds of transformations:</span>
+
+<span class="sd">        * Cutting the &quot;target&quot; dataset to only pick dates bigger than the start date informed in the parameters</span>
+
+<span class="sd">        * Fill the absent dates for the &quot;target&quot; dataset and others that are present in the &quot;data_frequencies&quot; discitonary in the parameters</span>
+
+<span class="sd">        * Create the related dataset based on the target dataset after the other trasnformations of the step, without considering the demand column.</span>
+<span class="sd">        The related dataset is particularly important for grouping informatins other than the time series of the demand (e.g. calendar events, price, item group ...)</span>
+<span class="sd">        and is generally the basis for the supervised methods</span>
+
+<span class="sd">    :dataset_size_or_start_date (str):</span>
+<span class="sd">        The first date to be considered in the target dataset, informations related to dates before the informed will not be considered (mandatory)</span>
+<span class="sd">    :ref_date:</span>
+<span class="sd">        The reference date.</span>
+<span class="sd">        If in training, ref date is the last date where  we have informatin about the target time series and the last day to be considered in training. </span>
+<span class="sd">        If in prediction is the last day where we have informatino and thus indicating that the next day should be the first for the pediction dataset. (mandatory)</span>
+<span class="sd">    :horizon (int):</span>
+<span class="sd">        The horizon that the model will be trained to predict (e.g. if horizon 12 and frequency &quot;W&quot; the model will be trained to predict 12 weeks to the futur) (mandatory)</span>
+<span class="sd">    :frequency (str):</span>
+<span class="sd">        The frequecy to which perform the aggregation (mandatory)</span>
+<span class="sd">    :prepare_relted_dataset (bool):</span>
+<span class="sd">        Wheter the related dataset must be created or not. If true, the related dataset is created based on the target dataset but without the demand information and with dates going from the target dataset start date until the target dataset end date plus the prediction horizon. (optional - default: false)</span>
+<span class="sd">    :data_frequencies (dict):</span>
+<span class="sd">        A frequency dictionary with the key being the dataset and the value the respective frequency. All datasets with frequency indicated will be transformed accordingly. </span>
+
+<span class="sd">    .. code-block:: python</span>
+<span class="sd">        </span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;: &quot;d03&quot;,</span>
+<span class="sd">            &quot;enabled&quot;: true,</span>
+<span class="sd">            &quot;step_name&quot;: &quot;DatePrep&quot;,</span>
+<span class="sd">            &quot;params&quot;: {</span>
+<span class="sd">                &quot;dataset_size_or_start_date&quot;: &quot;2019-01-01&quot;,</span>
+<span class="sd">                &quot;prepare_related_dataset&quot;: true,</span>
+<span class="sd">                &quot;horizon&quot;: &quot;${create.horizon}&quot;,</span>
+<span class="sd">                &quot;frequency&quot;: &quot;${create.frequency}&quot;,</span>
+<span class="sd">                &quot;ref_date&quot;: &quot;${ref_date}&quot;,</span>
+<span class="sd">                &quot;data_frequencies&quot;: {</span>
+<span class="sd">                    &quot;target&quot;: &quot;D&quot;</span>
+<span class="sd">                }</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="DatePrep.transform"><a class="viewcode-back" href="../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.data_prep_transformer.DatePrep.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span> <span class="n">MLModelObject</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Make the trasnformations for the step and step the env_vars accordingly.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mo.env_var: dict</span>
+
+<span class="sd">            :data_frequencies: A frequency dictionary with the key being the dataset and the value the respective frequency</span>
+
+<span class="sd">            :ref_date: The reference date for the run. </span>
+<span class="sd">                If in training, ref date is the last date where  we have informatin about the target time series and the last day to be considered in training. </span>
+<span class="sd">                If in prediction is the last day where we have informatino and thus indicating that the next day should be the first for the pediction dataset. </span>
+
+<span class="sd">            :target_from_date: The first date to be conosidered in the target dataset</span>
+
+<span class="sd">            :target_from_date: The last date present in the target dataset</span>
+
+<span class="sd">            :related_from_date: The first date to be considered in the related dataset (if present)</span>
+
+<span class="sd">            :related_to_date: The last date to be considered in the related dataset (if present) </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting step transformation&quot;</span><span class="p">)</span>
+
+        <span class="n">all_params</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+
+        <span class="n">data_frequencies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;data_frequencies&#39;</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;data_frequencies&#39;</span><span class="p">,</span> <span class="n">data_frequencies</span><span class="p">)</span>
+
+        <span class="n">dataset_size_or_start_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;dataset_size_or_start_date&#39;</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">dataset_size_or_start_date</span> <span class="o">==</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">dataset_size_or_start_date</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="k">pass</span>
+
+        <span class="n">dataset_size_or_start_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">dataset_size_or_start_date</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">)</span>
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">ref_date</span><span class="p">,</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;ref_date&#39;</span><span class="p">,</span> <span class="n">ref_date</span><span class="p">)</span>
+
+
+        <span class="n">forecast_horizon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;horizon&#39;</span><span class="p">)</span>
+        <span class="n">forecast_frequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;frequency&#39;</span><span class="p">)</span>
+
+        <span class="n">target_from_date</span> <span class="o">=</span> <span class="n">dataset_size_or_start_date</span>
+        <span class="n">target_to_date</span> <span class="o">=</span> <span class="n">ref_date</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;target_from_date&#39;</span><span class="p">,</span> <span class="n">target_from_date</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;target_to_date&#39;</span><span class="p">,</span> <span class="n">target_to_date</span><span class="p">)</span>
+
+        <span class="n">related_from_date</span> <span class="o">=</span> <span class="n">target_from_date</span>
+        <span class="n">ndays</span> <span class="o">=</span> <span class="n">forecast_horizon</span>
+        <span class="k">if</span> <span class="n">forecast_frequency</span> <span class="o">==</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span>
+            <span class="n">ndays</span> <span class="o">=</span> <span class="n">forecast_horizon</span>
+        <span class="k">elif</span> <span class="n">forecast_frequency</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;W&#39;</span><span class="p">):</span>
+            <span class="n">ndays</span> <span class="o">=</span> <span class="n">forecast_horizon</span><span class="o">*</span><span class="mi">7</span>
+        <span class="k">elif</span> <span class="n">forecast_frequency</span> <span class="o">==</span> <span class="s2">&quot;M&quot;</span><span class="p">:</span>
+            <span class="n">to_date</span> <span class="o">=</span> <span class="n">all_params</span><span class="p">[</span><span class="s1">&#39;target_to_date&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span> <span class="o">=</span> <span class="n">forecast_horizon</span><span class="p">)</span>
+            <span class="n">ndays</span> <span class="o">=</span> <span class="p">(</span><span class="n">to_date</span> <span class="o">-</span> <span class="n">all_params</span><span class="p">[</span><span class="s1">&#39;target_to_date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">days</span>
+        <span class="n">related_to_date</span> <span class="o">=</span>  <span class="n">target_to_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">ndays</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;related_from_date&#39;</span><span class="p">,</span> <span class="n">related_from_date</span><span class="p">)</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_env_var</span><span class="p">(</span><span class="s1">&#39;related_to_date&#39;</span><span class="p">,</span> <span class="n">related_to_date</span><span class="p">)</span>
+
+        <span class="n">cols_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">what</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cols_order</span><span class="p">):</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">what</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">where</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cols_order</span><span class="p">):</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill_absent_date</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;prepare_test_dataset&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">function_name</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;function&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">function_name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">vflow</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">,</span> <span class="n">vflow</span><span class="o">.</span><span class="n">RUN</span><span class="p">):</span>
+                <span class="n">df_validation</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">df_validation</span> <span class="o">=</span> <span class="n">df_validation</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df_validation</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">&gt;</span><span class="n">target_to_date</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df_validation</span><span class="p">[</span><span class="n">when</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">related_to_date</span><span class="p">)]</span>
+                <span class="n">data_frequencies</span><span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_frequencies</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span>
+                <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="s1">&#39;validation&#39;</span><span class="p">,</span> <span class="n">df_validation</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;prepare_related_dataset&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare_related</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mo</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">fill_absent_date</span><span class="p">(</span><span class="n">mo</span><span class="p">:</span> <span class="n">MLModelObject</span><span class="p">):</span>
+        <span class="n">data_name</span> <span class="o">=</span> <span class="s1">&#39;target&#39;</span>
+        <span class="n">data_frequencies</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;data_frequencies&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_name</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">data_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_frequencies</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mo</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_name</span><span class="p">)</span>
+        <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">(</span><span class="n">data_name</span><span class="p">)</span>
+
+
+
+        <span class="n">cols_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">cols_order</span> <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span> <span class="n">where</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;demand&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;demand&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="n">data_name</span> <span class="o">+</span> <span class="s1">&#39;_to_date&#39;</span><span class="p">)</span>
+        <span class="n">from_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="n">data_name</span> <span class="o">+</span> <span class="s1">&#39;_from_date&#39;</span><span class="p">)</span>
+        <span class="n">frequency</span> <span class="o">=</span> <span class="n">data_frequencies</span><span class="p">[</span><span class="n">data_name</span><span class="p">]</span>
+
+        <span class="n">df_min_data_atend</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">dimensions</span><span class="o">+</span><span class="p">[</span><span class="n">when</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">when</span><span class="p">:</span><span class="s1">&#39;min_date&#39;</span><span class="p">})</span>
+        <span class="n">df_min_data_atend</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s1">&#39;from_date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">from_date</span>
+
+        <span class="n">min_data_atend</span> <span class="o">=</span> <span class="n">from_date</span>
+        <span class="n">max_data_atend</span> <span class="o">=</span> <span class="n">ref_date</span>
+
+        <span class="n">pd_dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">min_data_atend</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">max_data_atend</span><span class="p">,</span> <span class="n">freq</span> <span class="o">=</span> <span class="n">frequency</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">when</span><span class="p">])</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">convert_data</span><span class="p">(</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd_dates</span><span class="p">,</span> <span class="n">as_type</span> <span class="o">=</span> <span class="n">dataset_type</span><span class="p">)</span>
+        <span class="n">dates</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">df_min_data_atend</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df_min_data_atend</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">result</span><span class="p">[</span><span class="n">when</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;min_date&#39;</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">when</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;from_date&#39;</span><span class="p">])]</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;min_date&#39;</span><span class="p">,</span> <span class="s1">&#39;from_date&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">dimensions</span><span class="o">+</span><span class="p">[</span><span class="n">when</span><span class="p">])</span>
+
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">data_name</span><span class="p">,</span> <span class="n">merged</span><span class="p">[</span><span class="n">cols_order</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">mo</span>
+
+
+    <span class="k">def</span> <span class="nf">prepare_related</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Iniciando transform PrepareRelatedTransformer&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data_map</span><span class="p">()</span>
+
+        <span class="n">key_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">,</span> <span class="s1">&#39;location_id&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">]</span>
+        <span class="n">target_df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;related&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">rel_df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)[</span><span class="n">key_columns</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rel_df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;related&#39;</span><span class="p">)</span>
+
+        <span class="n">ref_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;target_to_date&#39;</span><span class="p">)</span>
+        <span class="n">rel_date</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;related_to_date&#39;</span><span class="p">)</span>
+
+        <span class="c1">### adding future values ========================================</span>
+        <span class="n">distinct</span> <span class="o">=</span> <span class="n">target_df</span><span class="p">[[</span><span class="s1">&#39;item_id&#39;</span><span class="p">,</span> <span class="s1">&#39;location_id&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="n">future_dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="n">ref_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">1</span><span class="p">),</span> <span class="n">end</span> <span class="o">=</span> <span class="n">rel_date</span><span class="p">,</span> <span class="n">freq</span> <span class="o">=</span> <span class="s2">&quot;D&quot;</span><span class="p">),</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span>
+        <span class="n">future_dates</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">distinct</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">new_df</span> <span class="o">=</span> <span class="n">future_dates</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">distinct</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="s1">&#39;key&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;key&#39;</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">base_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">rel_df</span><span class="p">,</span> <span class="n">new_df</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1">### filling values ==============================================</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">rel_df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">key_cols_renamed</span> <span class="o">=</span> <span class="n">key_columns</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key_cols_renamed</span><span class="p">]</span>
+        <span class="n">base_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="n">key_cols_renamed</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">base_df_w_col</span> <span class="o">=</span> <span class="n">base_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">rel_df</span><span class="p">[</span><span class="n">key_cols_renamed</span> <span class="o">+</span> <span class="n">cols</span><span class="p">],</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">key_cols_renamed</span><span class="p">)</span>
+            <span class="n">base_df</span> <span class="o">=</span> <span class="n">base_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">base_df_w_col</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">key_cols_renamed</span><span class="p">)</span>
+
+        <span class="c1">### =============================================================</span>
+        <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="s1">&#39;related&#39;</span><span class="p">,</span> <span class="n">base_df</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finalizando transform PrepareRelatedTransformer&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mo</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

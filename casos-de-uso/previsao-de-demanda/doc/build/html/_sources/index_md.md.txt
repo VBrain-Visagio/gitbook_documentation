@@ -1,0 +1,12 @@
+Welcome to Forecast's documentation!
+====================================
+
+asdasdasdadas           
+
+Indices and tables
+==================
+
+-   genindex
+-   modindex
+-   search
+

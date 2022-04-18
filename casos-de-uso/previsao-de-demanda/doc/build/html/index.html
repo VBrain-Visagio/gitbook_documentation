@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Forecast’s documentation! &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Input Interface" href="forecast_rst_files/input_interface.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>Welcome to Forecast’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="welcome-to-forecast-s-documentation">
+<h1>Welcome to Forecast’s documentation!<a class="headerlink" href="#welcome-to-forecast-s-documentation" title="Permalink to this headline"></a></h1>
+<p>This is the documentation of VBrain’s Forecast module. It has 2 main infos:</p>
+<dl class="field-list simple">
+<dt class="field-odd">General Considerations</dt>
+<dd class="field-odd"><p>The steps that contain the input and output process, such as DataReader and OutputProcessor</p>
+</dd>
+<dt class="field-even">Pipeline Steps</dt>
+<dd class="field-even"><p>The steps that contain the data preparation steps, such as missing values treatment and aggregation</p>
+</dd>
+</dl>
+<section id="general-considerations">
+<h2>General Considerations<a class="headerlink" href="#general-considerations" title="Permalink to this headline"></a></h2>
+<p>The forecast module consist in the contrucion of pipelines that transform the data and create a model that can be used for prediction</p>
+<p>It uses a ModelObject to deal with data that will be passed to each step.</p>
+<p>The forecast module contains models for time series, including classical statistical models and machine learning models. It contains also steps for prepare the data for each respective model.</p>
+<p>The forecast is based on a pair (item,location) for which a demand will be predicted, with a indicated frequency and horizon.</p>
+</section>
+<section id="pipeline-steps">
+<h2>Pipeline Steps<a class="headerlink" href="#pipeline-steps" title="Permalink to this headline"></a></h2>
+<p>The forecast pipeline is actualy a meta pipeline, consisting of a pipeline responsibe for creating a model (that is later used for prediction),
+a pipeline to be executed after the model creation (post_creation), a pipeline to be executed after the prediction (post_execution) and a pipeline
+to eventually evaluate the prediction.</p>
+<p>Each pipeline is made by specific steps indicated in a params archive. Some steps are pecific and can only be used in one of the pipelines, but other are more general and can be used in
+different pipelines (as the DatReader step for instance).</p>
+<p>To make easy to understand each step they were separated in input interface (steps related to ingestion of data), datapre (steps related to data preparation), model (models avaiable) and output interface (steps that generate outputs)
+Check the examples to facilitate the comprehension of the pipeline construction.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/input_interface.html">Input Interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/input_interface.html#module-vpipe.steps.dataprep.data_reader">Data reader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/input_interface.html#module-vpipe.steps.output.output_loader">Output Loader</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/dataprep.html">Dataprep steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.aggregation">Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.data_prep_transformer">Data prep transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.data_processor">Data processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.dataset_filter">Dataset filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.evaluator_loader">Evaluator Loader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.merge_features">Merge features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.missing_values_transformer">Missing values transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.supervised_prep_transformer">Prepare supervised transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.date_features_extractor">Date features extractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.dummy_transformer">Dummy Transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.feature_encoder">Feature encoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.forward_looking_transformer">Forward looking tranformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.group_feature_transformer">Group Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.holidays">Holidays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.lag_feature_transformer">Lag feature transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.operation_between_columns">Operation Between Columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.rolling_window_transformer">Rolling window tranformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.stockout_transformer">Stockout transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.time_to_christmas_transformer">Time to chistmas transformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/dataprep.html#module-vpipe.steps.dataprep.featurization.working_day">Working day</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/model.html">Model steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.automl"><strong>AutoML</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.aws_forecast_estimator"><strong>AWS Forecast</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.cp_estimator"><strong>CP estimator</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.dummy"><strong>Dummy</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.lgbm_estimator"><strong>LGBM estimator</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.moving_average"><strong>Moving Average</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.sarimax"><strong>Sarimax</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/model.html#module-vpipe.steps.models.xgboost_estimator"><strong>XGBoost estimator</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/output_interface.html">Output Interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/output_interface.html#module-vpipe.steps.output.output_processor">Output processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/output_interface.html#module-vpipe.steps.output.feature_analyser">Feature analyser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/output_interface.html#module-vpipe.steps.output.score_calculator">Score calculator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/output_interface.html#module-vpipe.steps.output.forecast_analyser">Forecast analyser</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_rst_files/examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="forecast_rst_files/notebooks/example_temp/example_forecast.html">SARIMAX: Sales example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="forecast_rst_files/input_interface.html" class="btn btn-neutral float-right" title="Input Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

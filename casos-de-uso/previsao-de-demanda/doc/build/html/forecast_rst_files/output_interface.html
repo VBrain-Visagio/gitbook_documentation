@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Output Interface &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Model steps" href="model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Model steps</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Output Interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.output.output_processor">Output processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.output.feature_analyser">Feature analyser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.output.score_calculator">Score calculator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.output.forecast_analyser">Forecast analyser</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Output Interface</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/forecast_rst_files/output_interface.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="output-interface">
+<h1>Output Interface<a class="headerlink" href="#output-interface" title="Permalink to this headline"></a></h1>
+<section id="module-vpipe.steps.output.output_processor">
+<span id="output-processor"></span><h2>Output processor<a class="headerlink" href="#module-vpipe.steps.output.output_processor" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.output.output_processor.OutputProcessor">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.output.output_processor.</span></span><span class="sig-name descname"><span class="pre">OutputProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/vpipe/steps/output/output_processor.html#OutputProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.output.output_processor.OutputProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Process the output of the model. Effectively, clears the output folder indicated and stores the prediction as a csv</p>
+<dl class="field-list simple">
+<dt class="field-odd">Dataset_name (str)</dt>
+<dd class="field-odd"><p>The name of the datset that must be save as prediction (mandatory)</p>
+</dd>
+<dt class="field-even">File_name (str)</dt>
+<dd class="field-even"><p>Name of the csv file to be saved (mandatory)</p>
+</dd>
+<dt class="field-odd">Schema (list)</dt>
+<dd class="field-odd"><p>List of dictionaries that indicate which columns will be saved, their type and if they should be renamed. If not present all columns are selected (optional - default: not present)
+The schema must have three keys.</p>
+<ul class="simple">
+<li><p>“column_header”: indicating the actual name of the column that must be present in the dataset loaded</p></li>
+<li><p>“type”: indicating the type that the column must have</p></li>
+<li><p>“rename_to”: indicating the name that the column will have in the dataset</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;OutputProcessor&quot;</span> <span class="p">,</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;o01&quot;</span> <span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;dataset_name&quot;</span><span class="p">:</span> <span class="s2">&quot;prediction&quot;</span> <span class="p">,</span>
+        <span class="s2">&quot;file_name&quot;</span><span class="p">:</span> <span class="s2">&quot;output.csv&quot;</span> <span class="p">,</span>
+        <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+            <span class="s2">&quot;column_header&quot;</span><span class="p">:</span> <span class="s2">&quot;item_id&quot;</span> <span class="p">,</span>
+            <span class="s2">&quot;rename_to&quot;</span><span class="p">:</span> <span class="s2">&quot;item_id&quot;</span> <span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;str&quot;</span>
+            <span class="p">}</span> 
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>clear_folder</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.output.feature_analyser">
+<span id="feature-analyser"></span><h2>Feature analyser<a class="headerlink" href="#module-vpipe.steps.output.feature_analyser" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.output.feature_analyser.FeatureAnalyser">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.output.feature_analyser.</span></span><span class="sig-name descname"><span class="pre">FeatureAnalyser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/vpipe/steps/output/feature_analyser.html#FeatureAnalyser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.output.feature_analyser.FeatureAnalyser" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Step responsible for analysing the features if the model has features that can be analysed (as it is the case for feature importance in the supervised methods)</dt><dd><p>Plot the feature importance for the model trained.</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;FeatureAnalyser&quot;</span> <span class="p">,</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;o01&quot;</span> <span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.output.score_calculator">
+<span id="score-calculator"></span><h2>Score calculator<a class="headerlink" href="#module-vpipe.steps.output.score_calculator" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.output.score_calculator.ScoreCalculator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.output.score_calculator.</span></span><span class="sig-name descname"><span class="pre">ScoreCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/vpipe/steps/output/score_calculator.html#ScoreCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.output.score_calculator.ScoreCalculator" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate metrics and save them as mlflow metrics. 
+Also two plots are made and saved as artifacts of mlflow:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“actual_predicted.html”: plot the actual demand vs the prediction for each pair (item, location)</p></li>
+<li><p>“actual_predicted_errors_mape.html”: plot a heatmap where the x-axis is error (mape) the y-axis is the demand and the color represent the number of elements that have this error and demand</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Metrics (list)</dt>
+<dd class="field-odd"><p>A list containing all metrics that should be caluclated (mandatory)</p>
+</dd>
+<dt class="field-even">Custom_metrics (dict)</dt>
+<dd class="field-even"><p>A dictionary containing metrics that should be calculated and that include other values other than the prediction itself (e.g. the weights for the wape metric).
+The key should be the metric while the value should the column that should be used in the calculation of the metric. (optional - default: None)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ScoreCalculator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;i04&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;wape&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;rmse&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mae&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mmape&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mase&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;wape2&quot;</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;custom_weight&quot;</span><span class="p">:{</span>
+            <span class="s2">&quot;custom_wape&quot;</span><span class="p">:</span> <span class="s2">&quot;average_price&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.output.forecast_analyser">
+<span id="forecast-analyser"></span><h2>Forecast analyser<a class="headerlink" href="#module-vpipe.steps.output.forecast_analyser" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.output.forecast_analyser.ForecastAnalyser">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.output.forecast_analyser.</span></span><span class="sig-name descname"><span class="pre">ForecastAnalyser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/vpipe/steps/output/forecast_analyser.html#ForecastAnalyser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.output.forecast_analyser.ForecastAnalyser" title="Permalink to this definition"></a></dt>
+<dd><p>Step responsible for generating some analysis related to the predicition and the time series information.
+The plots generated by this step are aldo saved as artefacts in mlfloe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Frequency (str)</dt>
+<dd class="field-odd"><p>The name that had the dataset in the previous model (mandatory)</p>
+</dd>
+<dt class="field-even">Print_timeseries (dict)</dt>
+<dd class="field-even"><p>Dictionary indicating if each time series representing the demand information for each pair (item,location) should be plotted and how should it be.
+The key “print” indicate if the time series should be plotted, the key “export_format” indicate how (html or image) and the key “history_length” how many steps of the past should be present. (optional - default: false, for print)</p>
+</dd>
+<dt class="field-odd">8w_chart (bool)</dt>
+<dd class="field-odd"><p>indicate if the chart comparing the values of the actual demand of the last weeks and the prediction (if it was replicated for the past dates) (optional - default: false)</p>
+</dd>
+<dt class="field-even">Last_year_chart (bool)</dt>
+<dd class="field-even"><p>Indicating if the chart comparing the values of the prediction and the prediction for the same pperiod of the last year shoul be plotted (optional - default: false)</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ForecastAnalyser&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;i04&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;$</span><span class="si">{create.frequency}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;print_timeseries&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;print&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+            <span class="s2">&quot;export_format&quot;</span><span class="p">:</span><span class="s2">&quot;html&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;history_length&quot;</span><span class="p">:</span><span class="mi">3650</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;8w_chart&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+        <span class="s2">&quot;last_year_chart&quot;</span><span class="p">:</span> <span class="n">false</span>
+
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_last_8w_df</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_last_year_df</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_valid_rows</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>print_8w_chart</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>print_last_year_chart</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>valid_filename</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="model.html" class="btn btn-neutral float-left" title="Model steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

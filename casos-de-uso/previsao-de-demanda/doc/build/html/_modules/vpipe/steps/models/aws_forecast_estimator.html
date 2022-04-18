@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.models.aws_forecast_estimator &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.models.aws_forecast_estimator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.models.aws_forecast_estimator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.ml_model_object</span> <span class="kn">import</span> <span class="n">MLModelObject</span>
+<span class="kn">from</span> <span class="nn">vpipe.utils.aws_status_indicator</span> <span class="kn">import</span> <span class="n">StatusIndicator</span>
+<span class="kn">from</span> <span class="nn">vpipe.utils.aws_utils</span> <span class="kn">import</span> <span class="n">upload_file_s3</span><span class="p">,</span> <span class="n">get_or_create_iam_role</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="kn">import</span> <span class="n">ClientError</span>
+<span class="kn">import</span> <span class="nn">configparser</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">AWS_TARGET_TIME_SERIES_DATA</span> <span class="o">=</span> <span class="s2">&quot;target_time_series&quot;</span>
+<span class="n">AWS_ITEM_METADATA</span> <span class="o">=</span> <span class="s2">&quot;item_metadata&quot;</span>
+<span class="n">AWS_RELATED_TIME_SERIES_DATA</span> <span class="o">=</span> <span class="s2">&quot;related_time_series&quot;</span>
+
+<div class="viewcode-block" id="AmazonForecastEstimator"><a class="viewcode-back" href="../../../../forecast_rst_files/model.html#vpipe.steps.models.aws_forecast_estimator.AmazonForecastEstimator">[docs]</a><span class="k">class</span> <span class="nc">AmazonForecastEstimator</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_object</span><span class="p">:</span> <span class="n">MLModelObject</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">mo</span> <span class="o">=</span> <span class="n">model_object</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data_map</span><span class="p">()</span>
+
+        <span class="n">application_config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">)</span>
+        <span class="n">application_config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;./application.config&quot;</span><span class="p">)</span>
+
+        <span class="c1">## Fill params ========================================</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aws_region</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;AWS_REGION&#39;</span><span class="p">,</span><span class="s1">&#39;us-east-1&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;BUCKET_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;vbrain-forecast-prod&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bucket_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span> <span class="o">=</span> <span class="s1">&#39;vbrain&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_adjusted_frequency</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;frequency&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast_horizon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;horizon&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;algorithm&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hpo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;hpo&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auto_ml</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;auto_ml&#39;</span> <span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_related_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;has_related_data&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_item_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;has_item_metadata&quot;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">featurization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;aws_featurization&quot;</span> <span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_backtest_windows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;number_of_backtest_windows&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast_types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;forecast_types&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_datasets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;keep_datasets&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+
+        <span class="c1"># arns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictor_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_group_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+
+        <span class="n">target_schema</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_schema</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+        <span class="n">output_schema</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">target_schema</span> <span class="k">if</span> <span class="n">col</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">,</span> <span class="s1">&#39;location_id&#39;</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">forecast_output</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast_types</span><span class="p">:</span>
+            <span class="n">output_schema</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;header&quot;</span><span class="p">:</span> <span class="n">forecast_output</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_schema</span> <span class="o">=</span> <span class="n">output_schema</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_location_dimension</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">col</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;header&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">target_schema</span><span class="p">]</span>
+
+        <span class="c1">## Upload files ===========================================</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">region_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aws_region</span><span class="p">)</span>
+        <span class="n">forecast_session</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="n">service_name</span> <span class="o">=</span> <span class="s1">&#39;forecast&#39;</span><span class="p">)</span>
+
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">],</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="n">target_schema</span><span class="p">}</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="c1">#self.get_data_frequency(dataprep_params, &quot;target&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upload_dataset</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">data_type</span> <span class="o">=</span> <span class="n">AWS_TARGET_TIME_SERIES_DATA</span><span class="p">,</span> <span class="n">data_frequency</span> <span class="o">=</span> <span class="n">freq</span><span class="p">,</span> <span class="n">featurization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">featurization</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_related_data</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;related&#39;</span><span class="p">],</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_schema</span><span class="p">(</span><span class="s1">&#39;related&#39;</span><span class="p">)}</span>
+            <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="c1">#self.get_data_frequency(dataprep_params, &quot;related&quot;)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_dataset</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">data_type</span> <span class="o">=</span> <span class="n">AWS_RELATED_TIME_SERIES_DATA</span><span class="p">,</span> <span class="n">data_frequency</span> <span class="o">=</span> <span class="n">freq</span><span class="p">,</span> <span class="n">featurization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">featurization</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_item_metadata</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;item&#39;</span><span class="p">],</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_schema</span><span class="p">(</span><span class="s1">&#39;item&#39;</span><span class="p">)}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_dataset</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">data_type</span> <span class="o">=</span> <span class="n">AWS_ITEM_METADATA</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_group_dataset_arn</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">)</span>
+        <span class="c1">## ===================================================================</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Training predictor...&#39;</span><span class="p">)</span>
+        <span class="n">s3</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;s3&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictor_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_predictor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_group_arn</span><span class="p">,</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast_horizon</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hpo</span><span class="p">,</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">auto_ml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">featurization</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_backtest_windows</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_datasets</span><span class="p">:</span>
+                <span class="c1">##delete datasets</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Predictor trained: predictor_arn=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_arn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="n">forecast_session</span><span class="o">.</span><span class="n">get_accuracy_metrics</span><span class="p">(</span><span class="n">PredictorArn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor_arn</span><span class="p">)</span>
+            <span class="c1">#get first predictor metrics</span>
+            <span class="c1">#TODO verify if auto_ml returns more than one predictor result</span>
+            <span class="n">evaluation_results</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;PredictorEvaluationResults&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1">#TODO verify is first testWindow is always the SUMMARY</span>
+            <span class="n">test_windows_summary_metrics</span> <span class="o">=</span> <span class="n">evaluation_results</span><span class="p">[</span><span class="s1">&#39;TestWindows&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Metrics&#39;</span><span class="p">]</span>
+            <span class="n">error_metrics</span> <span class="o">=</span> <span class="n">test_windows_summary_metrics</span><span class="p">[</span><span class="s1">&#39;ErrorMetrics&#39;</span><span class="p">]</span>
+            <span class="n">error_metrics_mean</span> <span class="o">=</span> <span class="p">[</span><span class="n">error_metric</span> <span class="k">for</span> <span class="n">error_metric</span> <span class="ow">in</span> <span class="n">error_metrics</span> <span class="k">if</span> <span class="n">error_metric</span><span class="p">[</span><span class="s1">&#39;ForecastType&#39;</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;mean&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">error_metrics_mean</span><span class="p">[</span><span class="s1">&#39;ForecastType&#39;</span><span class="p">]</span>
+            <span class="n">mo</span><span class="o">.</span><span class="n">set_log</span><span class="p">(</span><span class="s1">&#39;metrics&#39;</span><span class="p">,</span> <span class="n">error_metrics_mean</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">):</span>
+        <span class="c1">## Check if AWS Forecast cost is allowed ============</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_alert</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
+        <span class="c1">## ==================================================</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data_map</span><span class="p">()</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">region_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aws_region</span><span class="p">)</span>
+        <span class="n">forecast_session</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="n">service_name</span> <span class="o">=</span> <span class="s1">&#39;forecast&#39;</span><span class="p">)</span>
+
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">],</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_schema</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)}</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="c1">#self.get_data_frequency(dataprep_params, &quot;target&quot;)</span>
+        <span class="n">creation_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upload_dataset</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">AWS_TARGET_TIME_SERIES_DATA</span><span class="p">,</span> <span class="n">is_forecast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_frequency</span> <span class="o">=</span> <span class="n">freq</span><span class="p">,</span> <span class="n">featurization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">featurization</span><span class="p">,</span> <span class="n">upload_time</span> <span class="o">=</span> <span class="n">creation_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_related_data</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;related&#39;</span><span class="p">],</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_schema</span><span class="p">(</span><span class="s1">&#39;related&#39;</span><span class="p">)}</span>
+            <span class="n">freq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="c1">#self.get_data_frequency(dataprep_params, &quot;related&quot;)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_dataset</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">AWS_RELATED_TIME_SERIES_DATA</span><span class="p">,</span> <span class="n">is_forecast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data_frequency</span> <span class="o">=</span> <span class="n">freq</span><span class="p">,</span> <span class="n">featurization</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">featurization</span><span class="p">,</span> <span class="n">upload_time</span> <span class="o">=</span> <span class="n">creation_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_item_metadata</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;item&#39;</span><span class="p">],</span> <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_schema</span><span class="p">(</span><span class="s1">&#39;item&#39;</span><span class="p">)}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_dataset</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">AWS_ITEM_METADATA</span><span class="p">,</span> <span class="n">is_forecast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upload_time</span> <span class="o">=</span> <span class="n">creation_time</span><span class="p">)</span>
+
+        <span class="c1">#self.update_group_dataset_arn(forecast_session)</span>
+        <span class="n">s3</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;s3&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Creating forecast...&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forecast_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_forecast</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor_arn</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Forecast created: forecast_arn=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">forecast_arn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Downloading forecasts from AWS Forecast...&#39;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_forecast</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast_arn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket_path</span><span class="p">,</span> <span class="n">creation_time</span> <span class="o">=</span> <span class="n">creation_time</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Download completed successfully&#39;</span><span class="p">)</span>
+            <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="s1">&#39;prediction&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1">##delete datasets</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_datasets</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+
+            <span class="n">forecast_session</span><span class="o">.</span><span class="n">delete_resource_tree</span><span class="p">(</span><span class="n">ResourceArn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast_arn</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">mo</span>
+
+    <span class="k">def</span> <span class="nf">delete_dataset_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_arn</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">s3</span><span class="p">):</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;Condition&quot;</span><span class="p">:</span> <span class="s2">&quot;IS&quot;</span><span class="p">,</span> <span class="s2">&quot;Key&quot;</span><span class="p">:</span> <span class="s2">&quot;DatasetArn&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">:</span> <span class="n">ds_arn</span><span class="p">}]</span>
+        <span class="k">for</span> <span class="n">dataset_import_job</span> <span class="ow">in</span> <span class="n">forecast_session</span><span class="o">.</span><span class="n">list_dataset_import_jobs</span><span class="p">(</span><span class="n">Filters</span> <span class="o">=</span> <span class="n">condition</span><span class="p">)[</span><span class="s1">&#39;DatasetImportJobs&#39;</span><span class="p">]:</span>
+            <span class="n">ds_import_job_arn</span> <span class="o">=</span> <span class="n">dataset_import_job</span><span class="p">[</span><span class="s1">&#39;DatasetImportJobArn&#39;</span><span class="p">]</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">dataset_import_job</span><span class="p">[</span><span class="s1">&#39;DataSource&#39;</span><span class="p">][</span><span class="s1">&#39;S3Config&#39;</span><span class="p">][</span><span class="s1">&#39;Path&#39;</span><span class="p">]</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;s3://&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">s3</span><span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="n">Bucket</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span> <span class="n">Key</span> <span class="o">=</span> <span class="n">key</span><span class="p">)</span>
+            <span class="n">forecast_session</span><span class="o">.</span><span class="n">delete_resource_tree</span><span class="p">(</span><span class="n">ResourceArn</span> <span class="o">=</span> <span class="n">ds_import_job_arn</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_dataset_arn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">data_frequency</span><span class="p">):</span>
+        <span class="n">arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_TARGET_TIME_SERIES_DATA</span><span class="p">:</span>
+            <span class="n">arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span>
+        <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_ITEM_METADATA</span><span class="p">:</span>
+            <span class="n">arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span>
+        <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_RELATED_TIME_SERIES_DATA</span><span class="p">:</span>
+            <span class="n">arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span>
+
+        <span class="k">if</span> <span class="n">arn</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Creating dataset for </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1">...&#39;</span><span class="p">)</span>
+            <span class="n">arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">project_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
+                                      <span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">,</span>
+                                      <span class="n">forecast</span> <span class="o">=</span> <span class="n">forecast_session</span><span class="p">,</span>
+                                      <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="p">,</span>
+                                      <span class="n">data_frequency</span> <span class="o">=</span> <span class="n">data_frequency</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Dataset created: datasetArn=</span><span class="si">{</span><span class="n">arn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_TARGET_TIME_SERIES_DATA</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span> <span class="o">=</span> <span class="n">arn</span>
+        <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_ITEM_METADATA</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span> <span class="o">=</span> <span class="n">arn</span>
+        <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_RELATED_TIME_SERIES_DATA</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span> <span class="o">=</span> <span class="n">arn</span>
+        <span class="k">return</span> <span class="n">arn</span>
+
+    <span class="k">def</span> <span class="nf">get_group_dataset_arn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">):</span>
+        <span class="c1">## For forecast process we cannot change datasetgroup. The predictor is associated with one specific datasetgroup. Verify if it is possible to update it</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_group_arn</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Creating dataset group...&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_group_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dataset_group</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Dataset group created: datasetGroupArn=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_group_arn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_group_arn</span>
+
+    <span class="k">def</span> <span class="nf">update_group_dataset_arn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">):</span>
+        <span class="n">gds_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_group_dataset_arn</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">)</span>
+        <span class="n">ds_arns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">ds_arns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_arn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">ds_arns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_metadata_arn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">ds_arns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_related_arn</span><span class="p">)</span>
+        <span class="n">forecast_session</span><span class="o">.</span><span class="n">update_dataset_group</span><span class="p">(</span><span class="n">DatasetGroupArn</span><span class="o">=</span><span class="n">gds_arn</span><span class="p">,</span> <span class="n">DatasetArns</span> <span class="o">=</span> <span class="n">ds_arns</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">upload_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast_session</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">AWS_TARGET_TIME_SERIES_DATA</span><span class="p">,</span> <span class="n">is_forecast</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">data_frequency</span> <span class="o">=</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">featurization</span><span class="o">=</span><span class="p">[],</span> <span class="n">upload_time</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Uploading dataset </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1">...&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s1">&#39;schema&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1">## Trata as condições para utilização da feature weather e colunas de geolocalização</span>
+        <span class="n">valid_columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="n">has_geolocation</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="s1">&#39;weather&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">featurization</span> <span class="ow">or</span> <span class="n">data_frequency</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;D&#39;</span><span class="p">):</span>
+            <span class="n">has_geolocation</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">valid_columns</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;geolocation&#39;</span><span class="p">)</span>
+                <span class="n">schema</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">schema</span> <span class="k">if</span> <span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;geolocation&#39;</span><span class="p">)]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="c1">##==================================================================================</span>
+
+        <span class="k">if</span> <span class="n">is_forecast</span><span class="p">:</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;./data/OUTPUT/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_path</span><span class="si">}</span><span class="s1">_forecast_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1">.csv&#39;</span>
+            <span class="n">output_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_path</span><span class="si">}</span><span class="s2">/data/forecast/</span><span class="si">{</span><span class="n">upload_time</span><span class="si">}</span><span class="s2">/forecast_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;./data/OUTPUT/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_path</span><span class="si">}</span><span class="s1">_train_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1">.csv&#39;</span>
+            <span class="n">output_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_path</span><span class="si">}</span><span class="s2">/data/train/train_</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+
+        <span class="n">full_s3_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;s3://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">output_name</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">valid_columns</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">upload_file_s3</span><span class="p">(</span><span class="n">bucket_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket_name</span><span class="p">,</span>
+                       <span class="n">key</span> <span class="o">=</span> <span class="n">input_path</span><span class="p">,</span>
+                       <span class="n">output_name</span> <span class="o">=</span> <span class="n">output_name</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">input_path</span><span class="p">)</span>
+
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_aws_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+        <span class="n">dataset_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dataset_arn</span><span class="p">(</span><span class="n">forecast_session</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">data_frequency</span><span class="p">)</span>
+        <span class="n">dataset_import_job_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_dataset</span><span class="p">(</span>
+            <span class="n">timestamp_format</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_ITEM_METADATA</span> <span class="k">else</span> <span class="s2">&quot;yyyy-MM-dd&quot;</span><span class="p">,</span>
+            <span class="n">s3_data_path</span> <span class="o">=</span> <span class="n">full_s3_path</span><span class="p">,</span>
+            <span class="n">forecast</span> <span class="o">=</span> <span class="n">forecast_session</span><span class="p">,</span>
+            <span class="n">dataset_arn</span> <span class="o">=</span> <span class="n">dataset_arn</span><span class="p">,</span>
+            <span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">,</span>
+            <span class="n">has_geolocation</span> <span class="o">=</span> <span class="n">has_geolocation</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Dataset </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1"> uploaded&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataset_import_job_arn</span>
+
+
+    <span class="k">def</span> <span class="nf">create_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">data_frequency</span><span class="p">):</span>
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;ds_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_TARGET_TIME_SERIES_DATA</span><span class="p">:</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                        <span class="n">Domain</span> <span class="o">=</span> <span class="s2">&quot;RETAIL&quot;</span><span class="p">,</span>
+                        <span class="n">DatasetType</span> <span class="o">=</span> <span class="s1">&#39;TARGET_TIME_SERIES&#39;</span><span class="p">,</span>
+                        <span class="n">DatasetName</span> <span class="o">=</span> <span class="n">dataset_name</span><span class="p">,</span>
+                        <span class="n">DataFrequency</span> <span class="o">=</span> <span class="n">data_frequency</span><span class="p">,</span>
+                        <span class="n">Schema</span> <span class="o">=</span> <span class="n">schema</span>
+                    <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_ITEM_METADATA</span><span class="p">:</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                        <span class="n">Domain</span> <span class="o">=</span> <span class="s2">&quot;RETAIL&quot;</span><span class="p">,</span>
+                        <span class="n">DatasetType</span> <span class="o">=</span> <span class="s1">&#39;ITEM_METADATA&#39;</span><span class="p">,</span>
+                        <span class="n">DatasetName</span> <span class="o">=</span> <span class="n">dataset_name</span><span class="p">,</span>
+                        <span class="n">Schema</span> <span class="o">=</span> <span class="n">schema</span>
+                    <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_RELATED_TIME_SERIES_DATA</span><span class="p">:</span>
+                    <span class="n">response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                        <span class="n">Domain</span> <span class="o">=</span> <span class="s2">&quot;RETAIL&quot;</span><span class="p">,</span>
+                        <span class="n">DatasetType</span> <span class="o">=</span> <span class="s1">&#39;RELATED_TIME_SERIES&#39;</span><span class="p">,</span>
+                        <span class="n">DatasetName</span> <span class="o">=</span> <span class="n">dataset_name</span><span class="p">,</span>
+                        <span class="n">DataFrequency</span> <span class="o">=</span> <span class="n">data_frequency</span><span class="p">,</span>
+                        <span class="n">Schema</span> <span class="o">=</span> <span class="n">schema</span>
+                    <span class="p">)</span>
+
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceAlreadyExistsException&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset </span><span class="si">{}</span><span class="s2"> already exisits&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">))</span>
+                    <span class="n">dataset_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;ds_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Trying another name in 60 seconds: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceInUseException&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resource in use. Waiting 60 seconds&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unexpected error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+
+        <span class="n">datasetArn</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;DatasetArn&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">datasetArn</span>
+
+    <span class="k">def</span> <span class="nf">create_forecast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">predictor_arn</span><span class="p">):</span>
+        <span class="n">forecast_types</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">forecast_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast_types</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">forecast_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">):</span>
+                <span class="n">forecast_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">forecast_type</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mi">100</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">forecast_type</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+                <span class="n">forecast_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forecast_type</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Wrong forecast type </span><span class="si">{</span><span class="n">forecast_type</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">forecast_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;f_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">create_forecast_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_forecast</span><span class="p">(</span><span class="n">ForecastName</span> <span class="o">=</span> <span class="n">forecast_name</span><span class="p">,</span>
+                                                                    <span class="n">PredictorArn</span> <span class="o">=</span> <span class="n">predictor_arn</span><span class="p">,</span>
+                                                                    <span class="n">ForecastTypes</span> <span class="o">=</span> <span class="n">forecast_types</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">waiting_time</span> <span class="o">=</span> <span class="mi">60</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;ResourceAlreadyExistsException&#39;</span><span class="p">]:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Resource </span><span class="si">{}</span><span class="s2"> already exisits&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">forecast_name</span><span class="p">))</span>
+                    <span class="n">forecast_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;f_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Trying new resource name in </span><span class="si">{</span><span class="n">waiting_time</span><span class="si">}</span><span class="s1"> seconds...&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceInUseException&#39;</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resource in use. Waiting </span><span class="si">{</span><span class="n">waiting_time</span><span class="si">}</span><span class="s2"> seconds...&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;LimitExceededException&#39;</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;API call limit exceeded: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">e</span><span class="p">)</span>
+                    <span class="n">waiting_time</span> <span class="o">=</span> <span class="mi">600</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Backing off and retrying in </span><span class="si">{</span><span class="n">waiting_time</span><span class="si">}</span><span class="s1"> seconds...&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unexpected error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">waiting_time</span><span class="p">)</span>
+
+        <span class="n">forecast_arn</span> <span class="o">=</span> <span class="n">create_forecast_response</span><span class="p">[</span><span class="s1">&#39;ForecastArn&#39;</span><span class="p">]</span>
+        <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">StatusIndicator</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">describer</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">describe_forecast</span><span class="p">(</span><span class="n">ForecastArn</span> <span class="o">=</span> <span class="n">forecast_arn</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Status&#39;</span><span class="p">]</span>
+            <span class="n">status_indicator</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ACTIVE&#39;</span><span class="p">):</span> <span class="k">break</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;CREATE_FAILED&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Message&#39;</span><span class="p">])</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="n">status_indicator</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">forecast_arn</span>
+
+    <span class="k">def</span> <span class="nf">create_predictor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">datasetGroupArn</span><span class="p">,</span> <span class="n">frequency</span><span class="p">,</span> <span class="n">forecast_horizon</span><span class="p">,</span> <span class="n">algorithm</span> <span class="o">=</span> <span class="s1">&#39;deepar&#39;</span><span class="p">,</span>
+                         <span class="n">hpo</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">auto_ml</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">featurization</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">number_of_backtest_windows</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+
+        <span class="n">algorithm_arn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">algorithm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;deepar&#39;</span><span class="p">:</span>
+                <span class="n">algorithm_arn</span> <span class="o">=</span> <span class="s1">&#39;arn:aws:forecast:::algorithm/Deep_AR_Plus&#39;</span>
+            <span class="k">elif</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;ets&#39;</span><span class="p">:</span>
+                <span class="n">algorithm_arn</span> <span class="o">=</span> <span class="s1">&#39;arn:aws:forecast:::algorithm/ETS&#39;</span>
+                <span class="n">hpo</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;cnn&#39;</span><span class="p">:</span>
+                <span class="n">algorithm_arn</span> <span class="o">=</span> <span class="s1">&#39;arn:aws:forecast:::algorithm/CNN-QR&#39;</span>
+
+        <span class="k">if</span> <span class="n">auto_ml</span><span class="p">:</span>
+            <span class="n">hpo</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">predictor_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;p_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">input_data_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;DatasetGroupArn&quot;</span><span class="p">:</span> <span class="n">datasetGroupArn</span><span class="p">}</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">featurization</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">supplementary_features</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">if</span> <span class="s1">&#39;holiday&#39;</span> <span class="ow">in</span> <span class="n">featurization</span><span class="p">:</span>
+                        <span class="n">supplementary_features</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;holiday&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">:</span> <span class="s2">&quot;BR&quot;</span><span class="p">})</span>
+                    <span class="k">if</span> <span class="s1">&#39;weather&#39;</span> <span class="ow">in</span> <span class="n">featurization</span><span class="p">:</span>
+                        <span class="n">supplementary_features</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;Name&quot;</span><span class="p">:</span> <span class="s2">&quot;weather&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">})</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">supplementary_features</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                        <span class="n">input_data_config</span><span class="p">[</span><span class="s2">&quot;SupplementaryFeatures&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">supplementary_features</span>
+
+                <span class="n">featurization_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ForecastFrequency&quot;</span><span class="p">:</span> <span class="n">frequency</span><span class="p">,</span>
+                                        <span class="s2">&quot;Featurizations&quot;</span><span class="p">:[</span>
+                                                <span class="p">{</span><span class="s2">&quot;AttributeName&quot;</span><span class="p">:</span> <span class="s2">&quot;demand&quot;</span><span class="p">,</span>
+                                                 <span class="s2">&quot;FeaturizationPipeline&quot;</span><span class="p">:</span>
+                                                     <span class="p">[</span>
+                                                         <span class="p">{</span>
+                                                             <span class="s2">&quot;FeaturizationMethodName&quot;</span><span class="p">:</span> <span class="s2">&quot;filling&quot;</span><span class="p">,</span>
+                                                             <span class="s2">&quot;FeaturizationMethodParameters&quot;</span><span class="p">:</span>
+                                                                 <span class="p">{</span>
+                                                                     <span class="s2">&quot;middlefill&quot;</span><span class="p">:</span> <span class="s2">&quot;zero&quot;</span>
+                                                                 <span class="p">}</span>
+                                                         <span class="p">}</span>
+                                                     <span class="p">]</span>
+                                                 <span class="p">}</span>
+                                            <span class="p">]</span>
+                                        <span class="p">}</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_location_dimension</span><span class="p">:</span>
+                    <span class="n">featurization_config</span><span class="p">[</span><span class="s2">&quot;ForecastDimensions&quot;</span><span class="p">]</span><span class="o">=</span> <span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
+
+                <span class="n">evaluation_parameters</span><span class="o">=</span> <span class="p">{</span><span class="s2">&quot;NumberOfBacktestWindows&quot;</span><span class="p">:</span> <span class="n">number_of_backtest_windows</span><span class="p">,</span>
+                                        <span class="s2">&quot;BackTestWindowOffset&quot;</span><span class="p">:</span> <span class="n">forecast_horizon</span><span class="p">}</span>
+                <span class="k">if</span> <span class="n">auto_ml</span><span class="p">:</span>
+                    <span class="n">create_predictor_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_predictor</span><span class="p">(</span><span class="n">PredictorName</span> <span class="o">=</span> <span class="n">predictor_name</span><span class="p">,</span>
+                                                                          <span class="n">ForecastHorizon</span> <span class="o">=</span> <span class="n">forecast_horizon</span><span class="p">,</span>
+                                                                          <span class="n">PerformAutoML</span> <span class="o">=</span> <span class="n">auto_ml</span><span class="p">,</span>
+                                                                          <span class="n">PerformHPO</span> <span class="o">=</span> <span class="n">hpo</span><span class="p">,</span>
+                                                                          <span class="n">EvaluationParameters</span> <span class="o">=</span> <span class="n">evaluation_parameters</span><span class="p">,</span>
+                                                                          <span class="n">InputDataConfig</span> <span class="o">=</span> <span class="n">input_data_config</span><span class="p">,</span>
+                                                                          <span class="n">FeaturizationConfig</span> <span class="o">=</span> <span class="n">featurization_config</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">create_predictor_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_predictor</span><span class="p">(</span><span class="n">PredictorName</span> <span class="o">=</span> <span class="n">predictor_name</span><span class="p">,</span>
+                                                                          <span class="n">AlgorithmArn</span> <span class="o">=</span> <span class="n">algorithm_arn</span><span class="p">,</span>
+                                                                          <span class="n">EvaluationParameters</span> <span class="o">=</span> <span class="n">evaluation_parameters</span><span class="p">,</span>
+                                                                          <span class="n">ForecastHorizon</span> <span class="o">=</span> <span class="n">forecast_horizon</span><span class="p">,</span>
+                                                                          <span class="n">PerformAutoML</span> <span class="o">=</span> <span class="n">auto_ml</span><span class="p">,</span>
+                                                                          <span class="n">PerformHPO</span> <span class="o">=</span> <span class="n">hpo</span><span class="p">,</span>
+                                                                          <span class="n">InputDataConfig</span> <span class="o">=</span> <span class="n">input_data_config</span><span class="p">,</span>
+                                                                          <span class="n">FeaturizationConfig</span> <span class="o">=</span> <span class="n">featurization_config</span><span class="p">)</span>
+
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceAlreadyExistsException&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Predictor </span><span class="si">{</span><span class="n">predictor_name</span><span class="si">}</span><span class="s2"> already exists&quot;</span><span class="p">)</span>
+                    <span class="n">predictor_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;p_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Trying another name in 60 seconds...&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceInUseException&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resource in use. Waiting 60 seconds&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unexpected error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unexpected error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="n">predictor_arn</span> <span class="o">=</span> <span class="n">create_predictor_response</span><span class="p">[</span><span class="s1">&#39;PredictorArn&#39;</span><span class="p">]</span>
+        <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">StatusIndicator</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">describer</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">describe_predictor</span><span class="p">(</span><span class="n">PredictorArn</span> <span class="o">=</span> <span class="n">predictor_arn</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Status&#39;</span><span class="p">]</span>
+            <span class="n">status_indicator</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ACTIVE&#39;</span><span class="p">):</span> <span class="k">break</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;CREATE_FAILED&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Message&#39;</span><span class="p">])</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="n">status_indicator</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">predictor_arn</span>
+
+    <span class="k">def</span> <span class="nf">import_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">s3_data_path</span><span class="p">,</span> <span class="n">dataset_arn</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">timestamp_format</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">has_geolocation</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">role_arn</span> <span class="o">=</span> <span class="n">get_or_create_iam_role</span><span class="p">(</span><span class="n">role_name</span> <span class="o">=</span> <span class="s2">&quot;S3nForecastFullAccess&quot;</span><span class="p">)</span>
+        <span class="n">datasetImportJobName</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;ds_impjob_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">timestamp_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="n">AWS_TARGET_TIME_SERIES_DATA</span> <span class="ow">and</span> <span class="n">has_geolocation</span><span class="p">:</span>
+                <span class="n">ds_import_job_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset_import_job</span><span class="p">(</span><span class="n">DatasetImportJobName</span> <span class="o">=</span> <span class="n">datasetImportJobName</span><span class="p">,</span>
+                                                                        <span class="n">DatasetArn</span> <span class="o">=</span> <span class="n">dataset_arn</span><span class="p">,</span>
+                                                                        <span class="n">DataSource</span> <span class="o">=</span> <span class="p">{</span>
+                                                                            <span class="s2">&quot;S3Config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                                                                <span class="s2">&quot;Path&quot;</span><span class="p">:</span> <span class="n">s3_data_path</span><span class="p">,</span>
+                                                                                <span class="s2">&quot;RoleArn&quot;</span><span class="p">:</span> <span class="n">role_arn</span>
+                                                                            <span class="p">}</span>
+                                                                        <span class="p">},</span>
+                                                                        <span class="n">TimestampFormat</span> <span class="o">=</span> <span class="n">timestamp_format</span><span class="p">,</span>
+                                                                        <span class="n">UseGeolocationForTimeZone</span> <span class="o">=</span> <span class="kc">True</span>
+                                                                        <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ds_import_job_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset_import_job</span><span class="p">(</span><span class="n">DatasetImportJobName</span> <span class="o">=</span> <span class="n">datasetImportJobName</span><span class="p">,</span>
+                                                                        <span class="n">DatasetArn</span> <span class="o">=</span> <span class="n">dataset_arn</span><span class="p">,</span>
+                                                                        <span class="n">DataSource</span> <span class="o">=</span> <span class="p">{</span>
+                                                                            <span class="s2">&quot;S3Config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                                                                <span class="s2">&quot;Path&quot;</span><span class="p">:</span> <span class="n">s3_data_path</span><span class="p">,</span>
+                                                                                <span class="s2">&quot;RoleArn&quot;</span><span class="p">:</span> <span class="n">role_arn</span>
+                                                                            <span class="p">}</span>
+                                                                        <span class="p">},</span>
+                                                                        <span class="n">TimestampFormat</span> <span class="o">=</span> <span class="n">timestamp_format</span>
+                                                                        <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ds_import_job_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset_import_job</span><span class="p">(</span><span class="n">DatasetImportJobName</span> <span class="o">=</span> <span class="n">datasetImportJobName</span><span class="p">,</span>
+                                                                        <span class="n">DatasetArn</span> <span class="o">=</span> <span class="n">dataset_arn</span><span class="p">,</span>
+                                                                        <span class="n">DataSource</span> <span class="o">=</span> <span class="p">{</span>
+                                                                            <span class="s2">&quot;S3Config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                                                                <span class="s2">&quot;Path&quot;</span><span class="p">:</span> <span class="n">s3_data_path</span><span class="p">,</span>
+                                                                                <span class="s2">&quot;RoleArn&quot;</span><span class="p">:</span> <span class="n">role_arn</span>
+                                                                            <span class="p">}</span>
+                                                                        <span class="p">}</span>
+                                                                        <span class="p">)</span>
+
+        <span class="n">ds_import_job_arn</span> <span class="o">=</span> <span class="n">ds_import_job_response</span><span class="p">[</span><span class="s1">&#39;DatasetImportJobArn&#39;</span><span class="p">]</span>
+        <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">StatusIndicator</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">describer</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">describe_dataset_import_job</span><span class="p">(</span><span class="n">DatasetImportJobArn</span> <span class="o">=</span> <span class="n">ds_import_job_arn</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Status&#39;</span><span class="p">]</span>
+            <span class="n">status_indicator</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ACTIVE&#39;</span><span class="p">):</span> <span class="k">break</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;CREATE_FAILED&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Message&#39;</span><span class="p">])</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">status_indicator</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+        <span class="n">forecast</span><span class="o">.</span><span class="n">describe_dataset_import_job</span><span class="p">(</span><span class="n">DatasetImportJobArn</span> <span class="o">=</span> <span class="n">ds_import_job_arn</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ds_import_job_arn</span>
+
+    <span class="k">def</span> <span class="nf">create_dataset_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">project_name</span><span class="p">):</span>
+        <span class="n">dataset_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dsg_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">create_dataset_group_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_dataset_group</span><span class="p">(</span><span class="n">DatasetGroupName</span> <span class="o">=</span> <span class="n">dataset_group_name</span><span class="p">,</span>
+                                                                              <span class="n">Domain</span> <span class="o">=</span> <span class="s2">&quot;RETAIL&quot;</span><span class="p">)</span>
+                <span class="n">datasetGroupArn</span> <span class="o">=</span> <span class="n">create_dataset_group_response</span><span class="p">[</span><span class="s1">&#39;DatasetGroupArn&#39;</span><span class="p">]</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceAlreadyExistsException&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset Group </span><span class="si">{}</span><span class="s2"> already exisits&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_group_name</span><span class="p">))</span>
+                    <span class="n">dataset_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dsg_</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Trying another name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_group_name</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceInUseException&#39;</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resource in use. Waiting 10 seconds&quot;</span><span class="p">)</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unexpected error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">datasetGroupArn</span>
+
+    <span class="k">def</span> <span class="nf">get_aws_output_colname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colname</span><span class="p">):</span>
+        <span class="n">col_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;location_id&quot;</span><span class="p">:</span> <span class="s2">&quot;location&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">col_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">colname</span><span class="p">,</span> <span class="n">colname</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">export_forecast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="n">forecastArn</span><span class="p">,</span> <span class="n">bucketName</span><span class="p">,</span> <span class="n">bucketPath</span><span class="p">,</span> <span class="n">creation_time</span><span class="p">):</span>
+        <span class="n">bucket_full_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bucketPath</span><span class="si">}</span><span class="s2">/data/output/</span><span class="si">{</span><span class="n">creation_time</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">forecast_export_job_arn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_export_job</span><span class="p">(</span><span class="n">bucketName</span><span class="p">,</span> <span class="n">bucket_full_path</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">forecastArn</span><span class="p">)</span>
+
+        <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;datetime&quot;</span><span class="p">:</span> <span class="s2">&quot;datetime64&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;float&quot;</span><span class="p">:</span> <span class="s2">&quot;float64&quot;</span><span class="p">}</span>
+        <span class="n">header_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="s2">&quot;prediction&quot;</span><span class="p">}</span>
+        <span class="n">col_order</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rename_to</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">type_to</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_schema</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">]</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+            <span class="n">col_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_aws_output_colname</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">col_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_name</span><span class="p">)</span>
+            <span class="n">rename_to</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">header_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span>
+            <span class="n">type_to</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">s3</span><span class="o">.</span><span class="n">list_objects</span><span class="p">(</span><span class="n">Bucket</span> <span class="o">=</span> <span class="n">bucketName</span><span class="p">,</span> <span class="n">Prefix</span> <span class="o">=</span> <span class="n">bucket_full_path</span><span class="p">)[</span><span class="s2">&quot;Contents&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;Key&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;./data/OUTPUT/output.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">s3</span><span class="o">.</span><span class="n">download_fileobj</span><span class="p">(</span><span class="n">bucketName</span><span class="p">,</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;Key&quot;</span><span class="p">],</span> <span class="n">f</span><span class="p">)</span>
+                <span class="n">output_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;./data/OUTPUT/output.csv&#39;</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_location_dimension</span> <span class="ow">and</span> <span class="s1">&#39;location&#39;</span> <span class="ow">in</span> <span class="n">col_order</span><span class="p">:</span>
+                    <span class="n">trunc_col_order</span> <span class="o">=</span> <span class="n">col_order</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">trunc_col_order</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">)</span>
+                    <span class="n">output_df</span> <span class="o">=</span> <span class="n">output_df</span><span class="p">[</span><span class="n">trunc_col_order</span><span class="p">]</span>
+                    <span class="n">output_df</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_df</span><span class="p">[</span><span class="n">col_order</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_datasets</span><span class="p">:</span>
+                <span class="n">s3</span><span class="o">.</span><span class="n">delete_object</span><span class="p">(</span><span class="n">Bucket</span> <span class="o">=</span> <span class="n">bucketName</span><span class="p">,</span> <span class="n">Key</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;Key&quot;</span><span class="p">])</span>
+
+        <span class="n">forecast</span><span class="o">.</span><span class="n">delete_resource_tree</span><span class="p">(</span><span class="n">ResourceArn</span> <span class="o">=</span> <span class="n">forecast_export_job_arn</span><span class="p">)</span>
+
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">type_to</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">rename_to</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+
+    <span class="k">def</span> <span class="nf">create_export_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucketName</span><span class="p">,</span> <span class="n">bucketPath</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">forecastArn</span><span class="p">):</span>
+        <span class="n">role_arn</span> <span class="o">=</span> <span class="n">get_or_create_iam_role</span><span class="p">(</span><span class="n">role_name</span> <span class="o">=</span> <span class="s2">&quot;S3nForecastFullAccess&quot;</span><span class="p">)</span>
+
+        <span class="n">forecastExportName</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;f_expjob_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_creation_time_sufix</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">outputPath</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;s3://</span><span class="si">{</span><span class="n">bucketName</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">bucketPath</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">forecast_export_response</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">create_forecast_export_job</span><span class="p">(</span>
+            <span class="n">ForecastExportJobName</span> <span class="o">=</span> <span class="n">forecastExportName</span><span class="p">,</span>
+            <span class="n">ForecastArn</span> <span class="o">=</span> <span class="n">forecastArn</span><span class="p">,</span>
+            <span class="n">Destination</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;S3Config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;Path&quot;</span><span class="p">:</span> <span class="n">outputPath</span><span class="p">,</span>
+                    <span class="s2">&quot;RoleArn&quot;</span><span class="p">:</span> <span class="n">role_arn</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">forecastExportJobArn</span> <span class="o">=</span> <span class="n">forecast_export_response</span><span class="p">[</span><span class="s1">&#39;ForecastExportJobArn&#39;</span><span class="p">]</span>
+        <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">StatusIndicator</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">describer</span> <span class="o">=</span> <span class="n">forecast</span><span class="o">.</span><span class="n">describe_forecast_export_job</span><span class="p">(</span><span class="n">ForecastExportJobArn</span> <span class="o">=</span> <span class="n">forecastExportJobArn</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Status&#39;</span><span class="p">]</span>
+            <span class="n">status_indicator</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ACTIVE&#39;</span><span class="p">):</span> <span class="k">break</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;CREATE_FAILED&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">describer</span><span class="p">[</span><span class="s1">&#39;Message&#39;</span><span class="p">])</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">status_indicator</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">forecastExportJobArn</span>
+
+
+    <span class="k">def</span> <span class="nf">get_aws_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
+        <span class="n">attribs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">schema_dict</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">schema_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;processing&#39;</span> <span class="ow">in</span> <span class="n">col</span> <span class="ow">and</span> <span class="s1">&#39;drop&#39;</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="s1">&#39;processing&#39;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+
+            <span class="n">attrib_name</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="s1">&#39;header&#39;</span><span class="p">]</span>
+            <span class="n">attrib_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjust_reserved_field_names</span><span class="p">(</span><span class="n">attrib_name</span><span class="p">)</span>
+
+            <span class="n">attrib_type</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+            <span class="c1">##se for a coluna geolocation, o tipo deve ser geolocation, e não o tipo real da coluna</span>
+            <span class="k">if</span> <span class="n">attrib_name</span> <span class="o">==</span> <span class="s1">&#39;geolocation&#39;</span><span class="p">:</span>
+                <span class="n">attrib_type</span> <span class="o">=</span> <span class="s1">&#39;geolocation&#39;</span>
+
+            <span class="k">if</span> <span class="n">attrib_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">]:</span>
+                <span class="n">attrib_type</span> <span class="o">=</span> <span class="s1">&#39;string&#39;</span>
+            <span class="k">elif</span> <span class="n">attrib_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;datetime&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">]:</span>
+                <span class="n">attrib_type</span> <span class="o">=</span> <span class="s1">&#39;timestamp&#39;</span>
+            <span class="k">elif</span> <span class="n">attrib_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">]:</span>
+                <span class="n">attrib_type</span> <span class="o">=</span> <span class="s1">&#39;float&#39;</span>
+            <span class="k">elif</span> <span class="n">attrib_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;integer&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="s1">&#39;int32&#39;</span><span class="p">,</span> <span class="s1">&#39;int64&#39;</span><span class="p">]:</span>
+                <span class="n">attrib_type</span> <span class="o">=</span> <span class="s1">&#39;integer&#39;</span>
+            <span class="k">elif</span> <span class="n">attrib_type</span> <span class="o">!=</span> <span class="s1">&#39;geolocation&#39;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Column type </span><span class="si">{</span><span class="n">attrib_type</span><span class="si">}</span><span class="s1"> not mapped&#39;</span><span class="p">)</span>
+
+            <span class="n">attribs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;AttributeName&quot;</span><span class="p">:</span> <span class="n">attrib_name</span><span class="p">,</span> <span class="s2">&quot;AttributeType&quot;</span><span class="p">:</span> <span class="n">attrib_type</span><span class="p">})</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;Attributes&quot;</span><span class="p">:</span> <span class="n">attribs</span><span class="p">}</span>
+
+    <span class="c1">##==============================================================================</span>
+    <span class="c1">##   AUXILIARY FUNCTIONS</span>
+    <span class="c1">##==============================================================================</span>
+
+    <span class="k">def</span> <span class="nf">get_creation_time_sufix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S_</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">adjust_reserved_field_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span> <span class="p">):</span>
+        <span class="c1">##change reserved fields</span>
+        <span class="nb">map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;location_id&#39;</span><span class="p">:</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;average_price&#39;</span><span class="p">:</span> <span class="s1">&#39;price&#39;</span>
+               <span class="p">}</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_adjusted_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+        <span class="n">frequency_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;W-MON&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">frequency_mapping</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frequency_mapping</span><span class="p">[</span><span class="n">freq</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">freq</span>
+
+    <span class="k">def</span> <span class="nf">get_data_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataprep_config</span><span class="p">,</span> <span class="n">datatype</span><span class="p">):</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataprep_config</span><span class="p">[</span><span class="s2">&quot;data_frequencies&quot;</span><span class="p">][</span><span class="n">datatype</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;target&quot;</span> <span class="ow">in</span> <span class="n">dataprep_config</span><span class="p">[</span><span class="s2">&quot;data_frequencies&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;D&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;data_frequencies&quot;</span> <span class="ow">in</span> <span class="n">dataprep_config</span> <span class="k">else</span> <span class="s2">&quot;D&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_adjusted_frequency</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">cost_alert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">,</span> <span class="s1">&#39;location_id&#39;</span><span class="p">]]</span>
+        <span class="n">max_cost</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s1">&#39;maximum_cost&#39;</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">tuples_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">)[</span><span class="n">dimensions</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">())</span>
+        <span class="n">horizon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast_horizon</span>
+        <span class="n">len_forecast_types</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forecast_types</span><span class="p">)</span>
+        <span class="n">n_predictions</span> <span class="o">=</span> <span class="n">tuples_size</span><span class="o">*</span><span class="n">horizon</span><span class="o">*</span><span class="n">len_forecast_types</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_predictions</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span><span class="o">*</span><span class="mf">0.6</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;AWS Forecast cost </span><span class="si">{</span><span class="n">cost</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> USD&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cost</span><span class="o">&gt;</span><span class="n">max_cost</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Cost </span><span class="si">{</span><span class="n">cost</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">USD&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Maximum cost </span><span class="si">{</span><span class="n">max_cost</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">USD exceeded. Calculated cost was </span><span class="si">{</span><span class="n">cost</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">USD&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

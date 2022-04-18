@@ -1,0 +1,211 @@
+Model steps
+======================
+
+
+**AutoML**
+-----------------------------------
+As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).
+Try different algorithms for forecasting with FLAML (https://microsoft.github.io/FLAML/) or pycaret
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"AutoML",
+         "params":{
+            "horizon": 7,         # prediction horizon - mandatory
+            "frequency": "W",      # forecast frequency - mandatory 
+            "time_budget": 300,  # timebudget for automl - default: 300
+            "models": [] #list of models to be passed (see the respective automl documentation to verify possibilities)
+            "use_pycaret": false, # if to use pycaret, if false than flaml is used - default: false
+            "flaml_params": {}, # params for flaml: metric, eval_method, task - default: wape, "cv", "regression" ; respectvely 
+            "pycaret_params": {}, # params for pycaret 
+            "cross_validation": false, #if cross validation will be performed - default: false
+            "cross_params_dict": {},   #dictionary with keys being the params to vary in CV and values the possible values
+            "cross_lookback": 52,  # size of the train set in CV (how many timestep will be taken in each fold)
+            "cross_folds": 5,    #number of cross folds in CV
+            "remove_unrealted_leading_features": false,  # for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false
+         }
+      }
+   ]
+
+.. automodule:: vpipe.steps.models.automl
+    :members:
+
+
+
+**AWS Forecast**
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.aws_forecast_estimator
+    :members:
+    
+
+    
+**CP estimator** 
+-----------------------------------
+Method that use a moving average as prediction, first calcuçating and choosing the best window period. Works for daily data 
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"CPModel",
+         "params":{
+            "horizon": 7,         # prediction horizon - mandatory
+            "frequency": "W",      # forecast frequency - mandatory 
+        }
+      }
+   ]
+
+.. automodule:: vpipe.steps.models.cp_estimator
+    :members:
+
+    
+
+    
+**Dummy** 
+-----------------------------------
+Predict 1 for all future values. 
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"DummyModel",
+         "params":{
+            "horizon": 7,         # prediction horizon - mandatory
+            "frequency": "W",      # forecast frequency - mandatory 
+        }
+      }
+   ]
+
+.. automodule:: vpipe.steps.models.dummy
+    :members:
+
+    
+
+    
+**LGBM estimator**
+-----------------------------------
+As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"LGBM",
+         "params":{
+            "horizon": 7,         # prediction horizon - mandatory
+            "frequency": "W",      # forecast frequency - mandatory 
+            "lgbm_params": {},  # dictionary with all possible lgbm params to be passed to the model
+            "cross_validation": false, #if cross validation will be performed - default: false
+            "cross_params_dict": {},   #dictionary with keys being the params to vary in CV and values the possible values
+            "cross_lookback": 52,  # size of the train set in CV (how many timestep will be taken in each fold)
+            "cross_folds": 5,    #number of cross folds in CV
+            "remove_unrealted_leading_features": false,  # for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false
+         }
+      }
+   ]
+
+.. automodule:: vpipe.steps.models.lgbm_estimator
+    :members:
+
+    
+
+    
+**Moving Average** 
+-----------------------------------
+Fits a moving average
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"MovingAverage",
+         "params":{
+            "horizon": 7,         # prediction horizon - mandatory
+            "frequency": "W",      # forecast frequency - mandatory
+            "lookback": 12        # defines the window size for which the moving avergae will be calculated - defaul: horizon
+        }
+      }
+   ]
+
+.. automodule:: vpipe.steps.models.moving_average
+    :members:
+
+
+    
+**Sarimax**
+-----------------------------------
+
+The other params in the params file could be seen in more details in `pmdarima's documentation <https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html>`_
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"Sarimax",
+         "params":{
+            "has_related_data": false,         # if there is exogenous variables in the dataset
+            "trend": "t",
+            "start_p":1, 
+            "start_q":1,
+            "seasonal":true,
+            "m":1,
+            "start_P":1,
+            "start_Q":1,
+            "max_p":5,
+            "max_d":5,
+            "max_q":5,
+            "max_P":5,
+            "max_Q":5, 
+            "max_D":5,
+            "max_order" : 100
+         }
+      }
+   ]
+    
+
+.. automodule:: vpipe.steps.models.sarimax
+    :members:
+
+
+**XGBoost estimator** 
+-----------------------------------
+As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).
+
+.. code-block:: python
+
+    "hyperparams_config":[
+      {
+         "id":"h01",
+         "enabled":true,
+         "step_name":"XGBoost",
+         "params":{
+            "horizon": 7,         # prediction horizon - mandatory
+            "frequency": "W",      # forecast frequency - mandatory 
+            "xgboost_params": {},  # dictionary with all possible xgboost params to be passed to the model
+            "cross_validation": false, #if cross validation will be performed - default: false
+            "cross_params_dict": {},   #dictionary with keys being the params to vary in CV and values the possible values
+            "cross_lookback": 52,  # size of the train set in CV (how many timestep will be taken in each fold)
+            "cross_folds": 5,    #number of cross folds in CV
+            "remove_unrealted_leading_features": false,  # for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false
+         }
+      }
+   ]
+
+.. automodule:: vpipe.steps.models.xgboost_estimator
+    :members:

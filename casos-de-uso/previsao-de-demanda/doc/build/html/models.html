@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model steps &mdash; Forecast 1.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Output steps" href="output.html" />
+    <link rel="prev" title="Dataprep steps" href="dataprep.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#aws-forecast-estimator">Aws forecast estimator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.models.cp_estimator">Cp estimator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.models.dummy">Dummy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lgbm">Lgbm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.models.mpmodel">Mpmodel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prophet-estimator">Prophet estimator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-vpipe.steps.models.random_forests">Random forests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sarimax"><strong>Sarimax</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Output steps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Model steps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="model-steps">
+<h1>Model steps<a class="headerlink" href="#model-steps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="aws-forecast-estimator">
+<h2>Aws forecast estimator<a class="headerlink" href="#aws-forecast-estimator" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-vpipe.steps.models.cp_estimator">
+<span id="cp-estimator"></span><h2>Cp estimator<a class="headerlink" href="#module-vpipe.steps.models.cp_estimator" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.models.cp_estimator.CPEstimator">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.models.cp_estimator.</code><code class="sig-name descname">CPEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/cp_estimator.html#CPEstimator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.cp_estimator.CPEstimator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-vpipe.steps.models.dummy">
+<span id="dummy"></span><h2>Dummy<a class="headerlink" href="#module-vpipe.steps.models.dummy" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.models.dummy.DummyEstimator">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.models.dummy.</code><code class="sig-name descname">DummyEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/dummy.html#DummyEstimator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.dummy.DummyEstimator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="lgbm">
+<h2>Lgbm<a class="headerlink" href="#lgbm" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-vpipe.steps.models.mpmodel">
+<span id="mpmodel"></span><h2>Mpmodel<a class="headerlink" href="#module-vpipe.steps.models.mpmodel" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.models.mpmodel.MundoPetEstimator">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.models.mpmodel.</code><code class="sig-name descname">MundoPetEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/mpmodel.html#MundoPetEstimator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.mpmodel.MundoPetEstimator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="vpipe.steps.models.mpmodel.MundoPetEstimator.score">
+<code class="sig-name descname">score</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">sample_weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/mpmodel.html#MundoPetEstimator.score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.mpmodel.MundoPetEstimator.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coefficient of determination R^2 of the prediction.</p>
+<p>The coefficient R^2 is defined as (1 - u/v), where u is the residual
+sum of squares ((y_true - y_pred) ** 2).sum() and v is the total
+sum of squares ((y_true - y_true.mean()) ** 2).sum().
+The best possible score is 1.0 and it can be negative (because the
+model can be arbitrarily worse). A constant model that always
+predicts the expected value of y, disregarding the input features,
+would get a R^2 score of 0.0.</p>
+<dl class="simple">
+<dt>X<span class="classifier">array-like of shape (n_samples, n_features)</span></dt><dd><p>Test samples. For some estimators this may be a
+precomputed kernel matrix or a list of generic objects instead,
+shape = (n_samples, n_samples_fitted),
+where n_samples_fitted is the number of
+samples used in the fitting for the estimator.</p>
+</dd>
+<dt>y<span class="classifier">array-like of shape (n_samples,) or (n_samples, n_outputs)</span></dt><dd><p>True values for X.</p>
+</dd>
+<dt>sample_weight<span class="classifier">array-like of shape (n_samples,), default=None</span></dt><dd><p>Sample weights.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>score<span class="classifier">float</span></dt><dd><p>R^2 of self.predict(X) wrt. y.</p>
+</dd>
+</dl>
+<p>The R2 score used when calling <code class="docutils literal notranslate"><span class="pre">score</span></code> on a regressor uses
+<code class="docutils literal notranslate"><span class="pre">multioutput='uniform_average'</span></code> from version 0.23 to keep consistent
+with default value of <code class="xref py py-func docutils literal notranslate"><span class="pre">r2_score()</span></code>.
+This influences the <code class="docutils literal notranslate"><span class="pre">score</span></code> method of all the multioutput
+regressors (except for
+<code class="xref py py-class docutils literal notranslate"><span class="pre">MultiOutputRegressor</span></code>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="prophet-estimator">
+<h2>Prophet estimator<a class="headerlink" href="#prophet-estimator" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-vpipe.steps.models.random_forests">
+<span id="random-forests"></span><h2>Random forests<a class="headerlink" href="#module-vpipe.steps.models.random_forests" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="vpipe.steps.models.random_forests.RandomForests">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.models.random_forests.</code><code class="sig-name descname">RandomForests</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/random_forests.html#RandomForests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.random_forests.RandomForests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="sarimax">
+<h2><strong>Sarimax</strong><a class="headerlink" href="#sarimax" title="Permalink to this headline">¶</a></h2>
+<p>Atributes:</p>
+<dl class="simple">
+<dt>frequency<span class="classifier">str</span></dt><dd><p>The frequency of the dataset, example: ‘D’ for daily data, ‘W’ for weekly data</p>
+</dd>
+<dt>horizon: int</dt><dd><p>Number of days that will be predicted</p>
+</dd>
+<dt>has_related: bool</dt><dd><p>If there is related data to be used as exog variables in forecast</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># the hyperparam_config file must have:</span>
+<span class="p">{</span>
+    <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;sarimax&quot;</span><span class="p">,</span>                <span class="c1"># the model that will be executed</span>
+    <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>                      <span class="c1"># how many days after the training will be predicted</span>
+    <span class="s2">&quot;has_related_data&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>         <span class="c1"># if there is exogenous variables in the dataset</span>
+    <span class="s2">&quot;trend&quot;</span><span class="p">:</span> <span class="s2">&quot;t&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;start_p&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;start_q&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;seasonal&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;m&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;start_P&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;start_Q&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;max_p&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;max_d&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;max_q&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;max_P&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;max_Q&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;max_D&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;max_order&quot;</span> <span class="p">:</span> <span class="mi">100</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<span class="target" id="module-vpipe.steps.models.SARIMAX"></span><dl class="py class">
+<dt id="vpipe.steps.models.SARIMAX.Sarimax">
+<em class="property">class </em><code class="sig-prename descclassname">vpipe.steps.models.SARIMAX.</code><code class="sig-name descname">Sarimax</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/SARIMAX.html#Sarimax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.SARIMAX.Sarimax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that contains the SARIMAX method for forecasting. 
+The class uses auto_arima for searching the best coefficints of the seasonal and not seasonal AR, I and MA components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> – Dictionary with the params from interface, dataprep, hyperparam and execution config files with this template to be used in hyperparam_config. To see a more detailed documentation of the parameters, search for pmdarima’s auto_arima:</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="vpipe.steps.models.SARIMAX.Sarimax.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/SARIMAX.html#Sarimax.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.SARIMAX.Sarimax.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that fits the SARIMAX and save the models into an attribute called models_sarimax using all the other step functions from the class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>class 'Model Object'</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>self</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>class Sarimax</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.models.SARIMAX.Sarimax.predict">
+<code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/SARIMAX.html#Sarimax.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.SARIMAX.Sarimax.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method predict from the class SARIMAX</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>class 'Model Object'</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>X Object with the predicted value as a new attribute</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ModelObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.models.SARIMAX.Sarimax.sarimax_forecasts">
+<code class="sig-name descname">sarimax_forecasts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/SARIMAX.html#Sarimax.sarimax_forecasts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.SARIMAX.Sarimax.sarimax_forecasts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method predict from the class SARIMAX</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ModelObject</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dataframe with forecasts</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="vpipe.steps.models.SARIMAX.Sarimax.sarimax_models">
+<code class="sig-name descname">sarimax_models</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeseries</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/vpipe/steps/models/SARIMAX.html#Sarimax.sarimax_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#vpipe.steps.models.SARIMAX.Sarimax.sarimax_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method that fits the best SARIMAX model for the dataset using auto_arima</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timseries</strong> – Dictionary with the timeseries with keys (item_id, location_id)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>All models fitted with auto_arima with keys (item_id, location_id)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataprep.html" class="btn btn-neutral float-left" title="Dataprep steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="output.html" class="btn btn-neutral float-right" title="Output steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

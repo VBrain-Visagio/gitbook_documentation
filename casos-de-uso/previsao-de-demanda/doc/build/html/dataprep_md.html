@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataprep steps &mdash; Forecast 1.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Output steps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Dataprep steps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dataprep_md.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="tex2jax_ignore mathjax_ignore section" id="dataprep-steps">
+<h1>Dataprep steps<a class="headerlink" href="#dataprep-steps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="assertion">
+<h2>Assertion<a class="headerlink" href="#assertion" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="aws-cost-alert">
+<h2>Aws cost alert<a class="headerlink" href="#aws-cost-alert" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="dailysales-transformer">
+<h2>Dailysales transformer<a class="headerlink" href="#dailysales-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="dataset-filter">
+<h2>Dataset filter<a class="headerlink" href="#dataset-filter" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="data-prep-transformer">
+<h2>Data prep transformer<a class="headerlink" href="#data-prep-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="data-processor">
+<h2>Data processor<a class="headerlink" href="#data-processor" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="data-reader">
+<h2>Data reader<a class="headerlink" href="#data-reader" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="date-features-extractor">
+<h2>Date features extractor<a class="headerlink" href="#date-features-extractor" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="feature-encoder">
+<h2>Feature encoder<a class="headerlink" href="#feature-encoder" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="fill-absent-dates">
+<h2>Fill absent dates<a class="headerlink" href="#fill-absent-dates" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="forward-looking-tranformer">
+<h2>Forward looking tranformer<a class="headerlink" href="#forward-looking-tranformer" title="Permalink to this headline">¶</a></h2>
+<p>asdasdasdasdkasdkjadkhakshdkjadhaksjhakjsdhakjshdkjash</p>
+</div>
+<div class="section" id="holidays">
+<h2>Holidays<a class="headerlink" href="#holidays" title="Permalink to this headline">¶</a></h2>
+<p>Class that puts holidays columns in your model object.</p>
+<p>city (str)
+:   The city that you want to get the holidays</p>
+<p>state (str)
+:   The state that you want to get the holidays</p>
+<p>holiday_types (str or list)
+:</p>
+<blockquote>
+<div><p>Type of holiday</p>
+<p>optional
+:   Insert optional holidays such as Teacher’s Day in Brazil</p>
+<p>holiday
+:   Insert not optional holidays such as Christmas</p>
+<p>special
+:   Insert special days such as Mother’s Day or Black Friday</p>
+</div></blockquote>
+<p>coverage (str or list)
+:   The coverage of the holiday: <em>‘national’</em>, <em>‘state’</em>, <em>‘municipal’</em></p>
+<p>column_by_type (bool)
+:   If true, for each holiday type will get a column in the datarame,
+that is, the models will treat them as different variables</p>
+<p>eve_column (bool)
+:   If true, an <em>‘eve_’</em> + {holiday_type} will be concatenated in the
+dataframe</p>
+<p>days_of_week_to_drop (list)
+:   A list of days of week that you don’t want to consider the holidays
+in that days.</p>
+<p>holidays_to_drop (list)
+:   A list of holidays that you don’t want to consider</p>
+<div class="highlight-{.sourceCode notranslate"><div class="highlight"><pre><span></span>{ # on dataprep_config, use the parameters above
+
+    &quot;featurization&quot;:{
+        &quot;holidays&quot;{
+            city :  &#39;rio de janeiro&#39;            
+            state : &#39;RJ&#39;                        
+            holiday_types : [&#39;special&#39;, &#39;holiday&#39;]            
+            coverage : [&#39;municipal&#39;, &#39;national&#39;]                    
+            column_by_type : true               
+            eve_column : true                       
+            days_of_week_to_drop : [&#39;monday&#39;, &#39;sunday&#39;]
+            holidays_to_drop : [&#39;Natal&#39;]
+        }
+    }
+
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="lag-feature-transformer">
+<h2>Lag feature transformer<a class="headerlink" href="#lag-feature-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="merge-features">
+<h2>Merge features<a class="headerlink" href="#merge-features" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="merge-geolocation">
+<h2>Merge geolocation<a class="headerlink" href="#merge-geolocation" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="metadata-transformer">
+<h2>Metadata transformer<a class="headerlink" href="#metadata-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="missing-values-transformer">
+<h2>Missing values transformer<a class="headerlink" href="#missing-values-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="prepare-related-transformer">
+<h2>Prepare related transformer<a class="headerlink" href="#prepare-related-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="prepare-supervised-transformer">
+<h2>Prepare supervised transformer<a class="headerlink" href="#prepare-supervised-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="rolling-window-tranformer">
+<h2>Rolling window tranformer<a class="headerlink" href="#rolling-window-tranformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="scaler">
+<h2>Scaler<a class="headerlink" href="#scaler" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="stockout-transformer">
+<h2>Stockout transformer<a class="headerlink" href="#stockout-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="time-to-chistmas-transformer">
+<h2>Time to chistmas transformer<a class="headerlink" href="#time-to-chistmas-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="time-to-transformer">
+<h2>Time to transformer<a class="headerlink" href="#time-to-transformer" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="working-day">
+<h2>Working day<a class="headerlink" href="#working-day" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

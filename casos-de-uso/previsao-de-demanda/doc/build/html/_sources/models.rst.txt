@@ -1,0 +1,105 @@
+Model steps
+======================
+
+
+Aws forecast estimator 
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.aws_forecast_estimator
+    :members:
+
+    
+
+    
+Cp estimator 
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.cp_estimator
+    :members:
+
+    
+
+    
+Dummy 
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.dummy
+    :members:
+
+    
+
+    
+Lgbm 
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.lgbm
+    :members:
+
+    
+
+    
+Mpmodel 
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.mpmodel
+    :members:
+
+    
+
+    
+Prophet estimator 
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.prophet_estimator.ProphetEstimator
+    :members:
+
+    
+
+    
+Random forests
+-----------------------------------
+
+.. automodule:: vpipe.steps.models.random_forests
+    :members:
+
+    
+
+    
+**Sarimax**
+-----------------------------------
+
+Atributes:
+
+frequency : str
+    The frequency of the dataset, example: 'D' for daily data, 'W' for weekly data
+horizon: int
+    Number of days that will be predicted
+has_related: bool
+    If there is related data to be used as exog variables in forecast
+
+
+.. code-block:: python
+    
+    # the hyperparam_config file must have: 
+    { 
+        "model": "sarimax",                # the model that will be executed
+        "horizon": 7,                      # how many days after the training will be predicted   
+        "has_related_data": false,         # if there is exogenous variables in the dataset
+        "trend": "t",
+        "start_p":1, 
+        "start_q":1,
+        "seasonal":true,
+        "m":1,
+        "start_P":1,
+        "start_Q":1,
+        "max_p":5,
+        "max_d":5,
+        "max_q":5,
+        "max_P":5,
+        "max_Q":5, 
+        "max_D":5,
+        "max_order" : 100
+    }
+
+.. automodule:: vpipe.steps.models.SARIMAX
+    :members:

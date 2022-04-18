@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.output.score_calculator &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.output.score_calculator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.output.score_calculator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vpipe.utils.forecast_metrics</span> <span class="kn">import</span> <span class="n">evaluate</span><span class="p">,</span> <span class="n">evaluate_custom</span>
+<span class="kn">import</span> <span class="nn">plotly.express</span> <span class="k">as</span> <span class="nn">px</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="n">TARGET_TIME_SERIES_DATA</span> <span class="o">=</span> <span class="s2">&quot;target&quot;</span>
+<span class="n">RELATED_TIME_SERIES_DATA</span> <span class="o">=</span> <span class="s2">&quot;related&quot;</span>
+<span class="n">FORECAST_DATA</span> <span class="o">=</span> <span class="s2">&quot;prediction&quot;</span>
+<span class="n">VALIDATION_DATA</span> <span class="o">=</span> <span class="s2">&quot;validation&quot;</span>
+<span class="n">ROOT_PATH</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;./data/OUTPUT/&#39;</span>
+
+
+<div class="viewcode-block" id="ScoreCalculator"><a class="viewcode-back" href="../../../../forecast_rst_files/output_interface.html#vpipe.steps.output.score_calculator.ScoreCalculator">[docs]</a><span class="k">class</span> <span class="nc">ScoreCalculator</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Calculate metrics and save them as mlflow metrics. </span>
+<span class="sd">    Also two plots are made and saved as artifacts of mlflow:</span>
+
+<span class="sd">        * &quot;actual_predicted.html&quot;: plot the actual demand vs the prediction for each pair (item, location)</span>
+<span class="sd">    </span>
+<span class="sd">        * &quot;actual_predicted_errors_mape.html&quot;: plot a heatmap where the x-axis is error (mape) the y-axis is the demand and the color represent the number of elements that have this error and demand</span>
+<span class="sd">    </span>
+<span class="sd">    :metrics (list):</span>
+<span class="sd">        A list containing all metrics that should be caluclated (mandatory)</span>
+<span class="sd">    </span>
+<span class="sd">    :custom_metrics (dict):</span>
+<span class="sd">        A dictionary containing metrics that should be calculated and that include other values other than the prediction itself (e.g. the weights for the wape metric).</span>
+<span class="sd">        The key should be the metric while the value should the column that should be used in the calculation of the metric. (optional - default: None)</span>
+
+<span class="sd">    .. code-block:: python</span>
+<span class="sd">        </span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;step_name&quot;: &quot;ScoreCalculator&quot;,</span>
+<span class="sd">            &quot;id&quot;: &quot;i04&quot;,</span>
+<span class="sd">            &quot;enabled&quot;: true,</span>
+<span class="sd">            &quot;params&quot;: {</span>
+<span class="sd">                &quot;metrics&quot;: [</span>
+<span class="sd">                    &quot;wape&quot;,</span>
+<span class="sd">                    &quot;rmse&quot;,</span>
+<span class="sd">                    &quot;mae&quot;,</span>
+<span class="sd">                    &quot;mmape&quot;,</span>
+<span class="sd">                    &quot;mase&quot;,</span>
+<span class="sd">                    &quot;wape2&quot;</span>
+<span class="sd">                ],</span>
+<span class="sd">                &quot;custom_weight&quot;:{</span>
+<span class="sd">                    &quot;custom_wape&quot;: &quot;average_price&quot;</span>
+<span class="sd">                }</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="c1">#calcula os erros de previsão e inclui os artefatos e métricas nos outputs</span>
+        <span class="n">model_object</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">log</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_object</span><span class="o">.</span><span class="n">get_log</span><span class="p">(</span><span class="s1">&#39;artifacts&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">log</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_object</span><span class="o">.</span><span class="n">get_log</span><span class="p">(</span><span class="s1">&#39;metrics&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="c1"># data = model_object.get_data()</span>
+        <span class="n">evaluate</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">model_object</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">VALIDATION_DATA</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">evaluate</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score</span><span class="p">(</span><span class="n">model_object</span><span class="p">)</span>
+            <span class="n">log</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">])</span>
+            <span class="n">log</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">log</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">]}</span>
+
+            <span class="n">model_object</span><span class="o">.</span><span class="n">set_log</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;artifacts&#39;</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">])</span>
+            <span class="n">model_object</span><span class="o">.</span><span class="n">set_log</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;metrics&#39;</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">model_object</span>
+
+
+    <span class="k">def</span> <span class="nf">_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">model_object</span><span class="p">):</span>
+
+        <span class="c1"># data = model_object.get_data()</span>
+        <span class="n">df_output</span> <span class="o">=</span> <span class="n">model_object</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">FORECAST_DATA</span><span class="p">)</span>
+        <span class="n">df_validation</span> <span class="o">=</span> <span class="n">model_object</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">VALIDATION_DATA</span><span class="p">)</span>
+
+        <span class="n">demand</span> <span class="o">=</span> <span class="s1">&#39;demand&#39;</span>
+        <span class="n">forecast</span> <span class="o">=</span> <span class="s1">&#39;prediction&#39;</span>
+        <span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+        <span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+
+        <span class="n">root_path</span> <span class="o">=</span> <span class="n">ROOT_PATH</span>
+        <span class="n">ref_dt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_object</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;prediction&#39;</span><span class="p">)[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">to_dt</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">model_object</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;prediction&#39;</span><span class="p">)[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">what</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_output</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">df_output</span><span class="p">[</span><span class="n">what</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">where</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_output</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">df_output</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+
+        <span class="n">output_dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">df_output</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span> <span class="n">where</span><span class="p">]]</span>
+        <span class="n">validation_dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">col_name</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">df_validation</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span> <span class="n">where</span><span class="p">]]</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">validation_dimensions</span> <span class="k">if</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">output_dimensions</span><span class="p">]</span>
+
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;artifacts&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+
+        <span class="c1">## actual vs predicted =====================================================</span>
+        <span class="n">df_agg</span> <span class="o">=</span> <span class="n">df_output</span><span class="p">[</span><span class="n">dimensions</span><span class="o">+</span><span class="p">[</span><span class="n">forecast</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">df_validation</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[(</span><span class="n">x</span><span class="p">[</span><span class="n">when</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">ref_dt</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">when</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">to_dt</span><span class="p">)]</span>
+        <span class="n">df_demand</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">dimensions</span><span class="o">+</span><span class="p">[</span><span class="n">demand</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">df_agg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df_agg</span><span class="p">,</span> <span class="n">df_demand</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">df_agg</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+
+        <span class="c1">## calculate performance metrics</span>
+        <span class="c1"># reports = [out for out in model_object.get_interface_config()[&quot;outputs&quot;] if out[&#39;name&#39;]==&quot;performance_report&quot;][0]</span>
+        <span class="n">performance_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;metrics&quot;</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">aggregate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;aggregate&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">aggregate</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">df_agg</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">df_agg</span><span class="p">[</span><span class="n">forecast</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">performance_metrics</span><span class="p">)</span>    
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df_agg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df_output</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">dimensions</span><span class="o">+</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">df_agg</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">df_agg</span><span class="p">[</span><span class="n">forecast</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">performance_metrics</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;custom_weight&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_params</span><span class="p">():</span>
+            <span class="n">df_agg_c</span> <span class="o">=</span> <span class="n">df_output</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="n">df_demand_c</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="n">df_agg_c</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df_agg_c</span><span class="p">,</span> <span class="n">df_demand_c</span><span class="p">,</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">on</span> <span class="o">=</span> <span class="n">dimensions</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">df_agg_c</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">metric</span><span class="p">,</span><span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_param</span><span class="p">(</span><span class="s2">&quot;custom_weight&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">scores</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">evaluate_custom</span><span class="p">(</span><span class="n">df_agg_c</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">df_agg_c</span><span class="p">[</span><span class="n">forecast</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span><span class="n">df_agg_c</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),[</span><span class="n">metric</span><span class="p">])[</span><span class="n">metric</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">scores</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="s1">&#39;metrics&#39;</span><span class="p">][</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+        <span class="c1">## save output and plot chart actual vs predict</span>
+        <span class="n">df_agg</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="s1">&#39;actual_predicted.csv&#39;</span><span class="p">),</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="s1">&#39;actual_predicted.csv&#39;</span><span class="p">))</span>
+        <span class="n">max_v</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">df_agg</span><span class="p">[</span><span class="n">demand</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">df_agg</span><span class="p">[</span><span class="n">forecast</span><span class="p">]))</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">df_agg</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">demand</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">forecast</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">where</span> <span class="k">if</span> <span class="n">where</span> <span class="ow">in</span> <span class="n">dimensions</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span> <span class="n">hover_name</span> <span class="o">=</span> <span class="n">what</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_shape</span><span class="p">(</span><span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">x0</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">max_v</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">max_v</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="s1">&#39;actual_predicted.html&#39;</span><span class="p">))</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="s1">&#39;actual_predicted.html&#39;</span><span class="p">))</span>
+
+        <span class="c1">## plot chart error heatmap</span>
+        <span class="n">df_agg</span> <span class="o">=</span> <span class="n">df_agg</span><span class="p">[</span><span class="n">df_agg</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">df_agg</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">df_agg</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span> <span class="o">-</span> <span class="n">df_agg</span><span class="p">[</span><span class="n">forecast</span><span class="p">])</span><span class="o">/</span><span class="n">df_agg</span><span class="p">[</span><span class="n">demand</span><span class="p">]</span>
+        <span class="n">bin_width</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="n">nbins</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">df_agg</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">df_agg</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">/</span><span class="n">bin_width</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">px</span><span class="o">.</span><span class="n">density_heatmap</span><span class="p">(</span><span class="n">df_agg</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">demand</span><span class="p">,</span> <span class="n">nbinsx</span> <span class="o">=</span> <span class="n">nbins</span><span class="p">,</span> <span class="n">marginal_x</span> <span class="o">=</span> <span class="s2">&quot;histogram&quot;</span><span class="p">,</span> <span class="n">marginal_y</span> <span class="o">=</span> <span class="s2">&quot;histogram&quot;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="s1">&#39;actual_predicted_errors_mape.html&#39;</span><span class="p">))</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;artifacts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_path</span><span class="p">,</span> <span class="s1">&#39;actual_predicted_errors_mape.html&#39;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

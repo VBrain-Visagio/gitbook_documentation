@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vpipe.steps.dataprep.featurization.dummy_transformer &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/input_interface.html">Input Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/model.html">Model steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/output_interface.html">Output Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../forecast_rst_files/examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+      <li>vpipe.steps.dataprep.featurization.dummy_transformer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for vpipe.steps.dataprep.featurization.dummy_transformer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">vbrainer.pipeline.abstract_vbrain_step</span> <span class="kn">import</span> <span class="n">AbstractVBrainStep</span>
+<span class="kn">from</span> <span class="nn">vbrainer.pipeline.model_objects.ml_model_object</span> <span class="kn">import</span> <span class="n">MLModelObject</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">what</span> <span class="o">=</span> <span class="s1">&#39;item_id&#39;</span>
+<span class="n">where</span> <span class="o">=</span> <span class="s1">&#39;location_id&#39;</span>
+<span class="n">when</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+<span class="n">key_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">what</span><span class="p">,</span><span class="n">where</span><span class="p">,</span><span class="n">when</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DummyAdjustmentTransformer"><a class="viewcode-back" href="../../../../../forecast_rst_files/dataprep.html#vpipe.steps.dataprep.featurization.dummy_transformer.DummyAdjustmentTransformer">[docs]</a><span class="k">class</span> <span class="nc">DummyAdjustmentTransformer</span><span class="p">(</span><span class="n">AbstractVBrainStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Transform one column into another based on a condition that can be refered to another column. No column is created the transformation occurs in the same column. </span>
+
+<span class="sd">    :dataset_name (str):</span>
+<span class="sd">        The dataset in which the transformation will be applied (optional - default: &quot;related&quot;)</span>
+<span class="sd">    :condition_data_source__name (str):</span>
+<span class="sd">        The dataset in which the column that the condition will be aplied is present (optional - default: &quot;related&quot;)</span>
+<span class="sd">    :column_name (str):</span>
+<span class="sd">        The column to be transformed (mandatory)</span>
+<span class="sd">    :condition_column (str):</span>
+<span class="sd">        The column where the condition will be applied. (mandatory)</span>
+<span class="sd">    :encoded (bool):</span>
+<span class="sd">        If the column that the transformation will be applied was transformed or not (optional - default: false)</span>
+<span class="sd">    :rules (list):</span>
+
+<span class="sd">        A list of dictionaries with two mandatory keys</span>
+<span class="sd">        </span>
+<span class="sd">        :condition (str): </span>
+<span class="sd">            Which condition will be verified, possible: &quot;==0&quot;,&quot;!=0&quot;,&quot;&gt;0&quot;,&quot;&gt;=0&quot;,&quot;&lt;0&quot;,&quot;&lt;=0&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        :value (float):</span>
+<span class="sd">            The value to be inserted in the column where the consition is satisfied</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;id&quot;: &quot;d07&quot;,</span>
+<span class="sd">            &quot;enabled&quot;: true,</span>
+<span class="sd">            &quot;step_name&quot;: &quot;DummyAdjustment&quot;,</span>
+<span class="sd">            &quot;params&quot;: {</span>
+<span class="sd">                &quot;dummy_adjustment&quot;: [</span>
+<span class="sd">                    {</span>
+<span class="sd">                        &quot;dataset_name&quot;: &quot;related&quot;,</span>
+<span class="sd">                        &quot;condition_data_source_name&quot;: &quot;related&quot;,</span>
+<span class="sd">                        &quot;column_name&quot;: &quot;foo&quot;,</span>
+<span class="sd">                        &quot;condition_column&quot;: &quot;bar&quot;</span>
+<span class="sd">                        &quot;encoded&quot;: false</span>
+<span class="sd">                        &quot;rules&quot;: [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;condition&quot;:&quot;==0&quot;,</span>
+<span class="sd">                                &quot;value&quot;:1</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    }</span>
+<span class="sd">                ]</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mo</span><span class="p">:</span><span class="n">MLModelObject</span><span class="p">):</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting dummy transform &#39;</span><span class="p">)</span>
+
+        <span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_exec_params</span><span class="p">()</span>
+        
+        <span class="c1"># Fill params =====================================</span>
+
+        <span class="n">dummy_params</span> <span class="o">=</span> <span class="n">params_</span><span class="p">[</span><span class="s1">&#39;dummy_adjustment&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">dummy_params</span><span class="p">:</span>
+            <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataset_name&#39;</span><span class="p">,</span> <span class="s1">&#39;related&#39;</span><span class="p">)</span>
+            <span class="n">data_source_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;condition_data_source_name&#39;</span><span class="p">,</span> <span class="s1">&#39;related&#39;</span><span class="p">)</span>
+            <span class="n">column_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;column_name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">condition_column_name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;condition_column&#39;</span><span class="p">,</span> <span class="n">column_name</span><span class="p">)</span>
+            <span class="n">encoded</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;encoded&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rules&#39;</span><span class="p">,[{</span><span class="s1">&#39;condition&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span><span class="s1">&#39;value&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}])</span>
+
+            <span class="n">df</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="n">drop_column</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">data_source_name</span> <span class="o">!=</span> <span class="n">dataset_name</span><span class="p">:</span>
+                <span class="n">source_data</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_source_name</span><span class="p">)</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">source_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">key_cols</span> <span class="o">+</span> <span class="p">[</span><span class="n">condition_column_name</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span> <span class="o">=</span> <span class="n">key_cols</span><span class="p">),</span> <span class="n">how</span> <span class="o">=</span> <span class="s1">&#39;left&#39;</span><span class="p">,</span><span class="n">on</span> <span class="o">=</span> <span class="n">key_cols</span><span class="p">)</span>
+                <span class="n">drop_column</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">bin_columns_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">encoded</span><span class="p">:</span>
+                <span class="n">encoding_relations</span> <span class="o">=</span> <span class="n">mo</span><span class="o">.</span><span class="n">get_env_var</span><span class="p">(</span><span class="s1">&#39;encoding_relations&#39;</span><span class="p">)</span>
+                <span class="n">bin_columns_names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">encoding_relations</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bin_columns_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">bin_columns_names</span><span class="p">:</span>
+                <span class="n">condition</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s1">&#39;condition&#39;</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">condition</span> <span class="o">==</span> <span class="s2">&quot;==0&quot;</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">condition_column_name</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s2">&quot;!=0&quot;</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="p">[</span><span class="n">condition_column_name</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s2">&quot;&gt;0&quot;</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">condition_column_name</span><span class="p">]</span><span class="o">.</span><span class="n">gt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s2">&quot;&gt;=0&quot;</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">condition_column_name</span><span class="p">]</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s2">&quot;&lt;0&quot;</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">condition_column_name</span><span class="p">]</span><span class="o">.</span><span class="n">lt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="n">condition</span> <span class="o">==</span> <span class="s2">&quot;&lt;=0&quot;</span><span class="p">:</span>
+                    <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">condition_column_name</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown condition </span><span class="si">{</span><span class="n">condition</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">drop_column</span><span class="p">:</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">condition_column_name</span><span class="p">],</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+            
+
+            <span class="n">mo</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">mo</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

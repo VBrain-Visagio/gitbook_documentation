@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model steps &mdash; Forecast 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Post Creation" href="../post_creation.html" />
+    <link rel="prev" title="Input steps" href="input.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Forecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../model_pipeline.html">Model Pipeline</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dataprep.html">Dataprep steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input.html">Input steps</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Model steps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.automl"><strong>AutoML</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.aws_forecast_estimator"><strong>AWS Forecast</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.cp_estimator"><strong>CP estimator</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.dummy"><strong>Dummy</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.lgbm_estimator"><strong>LGBM estimator</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.moving_average"><strong>Moving Average</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.sarimax"><strong>Sarimax</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-vpipe.steps.models.xgboost_estimator"><strong>XGBoost estimator</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../post_creation.html">Post Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../post_execution.html">Post Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluator.html">Evaluator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Forecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../model_pipeline.html">Model Pipeline</a> &raquo;</li>
+      <li>Model steps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/forecast_rst_files/model_pipeline/model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="model-steps">
+<h1>Model steps<a class="headerlink" href="#model-steps" title="Permalink to this headline"></a></h1>
+<section id="module-vpipe.steps.models.automl">
+<span id="automl"></span><h2><strong>AutoML</strong><a class="headerlink" href="#module-vpipe.steps.models.automl" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.automl.AutoML">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.automl.</span></span><span class="sig-name descname"><span class="pre">AutoML</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/automl.html#AutoML"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.automl.AutoML" title="Permalink to this definition"></a></dt>
+<dd><p>As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).
+Try different algorithms for forecasting with FLAML (<a class="reference external" href="https://microsoft.github.io/FLAML/">https://microsoft.github.io/FLAML/</a>) or pycaret</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;hyperparams_config&quot;</span><span class="p">:[</span>
+<span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;AutoML&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>         <span class="c1"># prediction horizon - mandatory</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span>      <span class="c1"># forecast frequency - mandatory </span>
+        <span class="s2">&quot;time_budget&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span>  <span class="c1"># timebudget for automl - default: 300</span>
+        <span class="s2">&quot;models&quot;</span><span class="p">:</span> <span class="p">[]</span> <span class="c1">#list of models to be passed (see the respective automl documentation to verify possibilities)</span>
+        <span class="s2">&quot;use_pycaret&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span> <span class="c1"># if to use pycaret, if false than flaml is used - default: false</span>
+        <span class="s2">&quot;flaml_params&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="c1"># params for flaml: metric, eval_method, task - default: wape, &quot;cv&quot;, &quot;regression&quot; ; respectvely </span>
+        <span class="s2">&quot;pycaret_params&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="c1"># params for pycaret </span>
+        <span class="s2">&quot;cross_validation&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span> <span class="c1">#if cross validation will be performed - default: false</span>
+        <span class="s2">&quot;cross_params_dict&quot;</span><span class="p">:</span> <span class="p">{},</span>   <span class="c1">#dictionary with keys being the params to vary in CV and values the possible values</span>
+        <span class="s2">&quot;cross_lookback&quot;</span><span class="p">:</span> <span class="mi">52</span><span class="p">,</span>  <span class="c1"># size of the train set in CV (how many timestep will be taken in each fold)</span>
+        <span class="s2">&quot;cross_folds&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>    <span class="c1">#number of cross folds in CV</span>
+        <span class="s2">&quot;remove_unrealted_leading_features&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>  <span class="c1"># for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>]</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.automl.AutoML.fit" title="vpipe.steps.models.automl.AutoML.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(mo[, y])</p></td>
+<td><p>Fit a AutoML model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.automl.AutoML.predict" title="vpipe.steps.models.automl.AutoML.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(mo)</p></td>
+<td><p>Method that use the fitted models to make the prediction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.automl.AutoML.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/automl.html#AutoML.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.automl.AutoML.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit a AutoML model. As a supervised learning algorithm, needs the supervised prep step to be present in the pipeline before the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the features. Established in the supervised prep step</p>
+</dd>
+<dt class="field-even">supervised_target</dt>
+<dd class="field-even"><p>Pandas dataframe containing the target dataset. Established in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mo.env_vars</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">prediction_strategy</dt>
+<dd class="field-odd"><p>Prediction Strategy defined in the supervised prep step</p>
+</dd>
+<dt class="field-even">supervised_categorical_columns</dt>
+<dd class="field-even"><p>Columns that must be treated as categorical, defined in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>mo.env_vars: dict</dt><dd><dl class="field-list simple">
+<dt class="field-odd">model_features</dt>
+<dd class="field-odd"><p>Dictionary containing two keys: “feature_columns”: (with a list of the columns used in training) 
+and “feature_importance” (with the average feature_importance of collumns)</p>
+</dd>
+<dt class="field-even">vflow_client</dt>
+<dd class="field-even"><p>vflow client, only used for pycaret</p>
+</dd>
+</dl>
+</dd>
+<dt>self.models: dict</dt><dd><p>Dictionary saved as a propertie of the class, that varies according to prediction strategy (defined in the supervised prep step).
+Each key is the future time step (“demand+0”, “demand+1”, …) and the value is tyhe model trained for the timestep</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.automl.AutoML.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/automl.html#AutoML.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.automl.AutoML.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Method that use the fitted models to make the prediction. As a supervised leanring class, the supervised prep step need to be part of the pipeline before the step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.env_var</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">ref_date</dt>
+<dd class="field-odd"><p>Reference date for the forecast period</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the features. Established in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the forecast.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.aws_forecast_estimator">
+<span id="aws-forecast"></span><h2><strong>AWS Forecast</strong><a class="headerlink" href="#module-vpipe.steps.models.aws_forecast_estimator" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.aws_forecast_estimator.AmazonForecastEstimator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.aws_forecast_estimator.</span></span><span class="sig-name descname"><span class="pre">AmazonForecastEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/aws_forecast_estimator.html#AmazonForecastEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.aws_forecast_estimator.AmazonForecastEstimator" title="Permalink to this definition"></a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 76%" />
+<col style="width: 24%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>adjust_reserved_field_names</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>cost_alert</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>create_dataset</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>create_dataset_group</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>create_export_job</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>create_forecast</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>create_predictor</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>delete_dataset_files</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>export_forecast</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_adjusted_frequency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_aws_output_colname</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_aws_schema</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_creation_time_sufix</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_data_frequency</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_dataset_arn</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_group_dataset_arn</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>import_dataset</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update_group_dataset_arn</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>upload_dataset</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.cp_estimator">
+<span id="cp-estimator"></span><h2><strong>CP estimator</strong><a class="headerlink" href="#module-vpipe.steps.models.cp_estimator" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.cp_estimator.CPEstimator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.cp_estimator.</span></span><span class="sig-name descname"><span class="pre">CPEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/cp_estimator.html#CPEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.cp_estimator.CPEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Method that use a moving average as prediction, first calcuçating and choosing the best window period. Works for daily data</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;CPModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>         <span class="c1"># prediction horizon - mandatory</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span>      <span class="c1"># forecast frequency - mandatory </span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>fit</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>predict</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.dummy">
+<span id="dummy"></span><h2><strong>Dummy</strong><a class="headerlink" href="#module-vpipe.steps.models.dummy" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.dummy.DummyEstimator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.dummy.</span></span><span class="sig-name descname"><span class="pre">DummyEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/dummy.html#DummyEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.dummy.DummyEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Predict 1 for all future values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;DummyModel&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>         <span class="c1"># prediction horizon - mandatory</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span>      <span class="c1"># forecast frequency - mandatory </span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.dummy.DummyEstimator.fit" title="vpipe.steps.models.dummy.DummyEstimator.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Set horizon and frequency</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.dummy.DummyEstimator.predict" title="vpipe.steps.models.dummy.DummyEstimator.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X)</p></td>
+<td><p>Set 1 for future values</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.dummy.DummyEstimator.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/dummy.html#DummyEstimator.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.dummy.DummyEstimator.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Set horizon and frequency</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.dummy.DummyEstimator.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/dummy.html#DummyEstimator.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.dummy.DummyEstimator.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Set 1 for future values</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.lgbm_estimator">
+<span id="lgbm-estimator"></span><h2><strong>LGBM estimator</strong><a class="headerlink" href="#module-vpipe.steps.models.lgbm_estimator" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.lgbm_estimator.LGBM">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.lgbm_estimator.</span></span><span class="sig-name descname"><span class="pre">LGBM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/lgbm_estimator.html#LGBM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.lgbm_estimator.LGBM" title="Permalink to this definition"></a></dt>
+<dd><p>As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+   <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;LGBM&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+      <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>         <span class="c1"># prediction horizon - mandatory</span>
+      <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span>      <span class="c1"># forecast frequency - mandatory </span>
+      <span class="s2">&quot;lgbm_params&quot;</span><span class="p">:</span> <span class="p">{},</span>  <span class="c1"># dictionary with all possible lgbm params to be passed to the model</span>
+      <span class="s2">&quot;cross_validation&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span> <span class="c1">#if cross validation will be performed - default: false</span>
+      <span class="s2">&quot;cross_params_dict&quot;</span><span class="p">:</span> <span class="p">{},</span>   <span class="c1">#dictionary with keys being the params to vary in CV and values the possible values</span>
+      <span class="s2">&quot;cross_lookback&quot;</span><span class="p">:</span> <span class="mi">52</span><span class="p">,</span>  <span class="c1"># size of the train set in CV (how many timestep will be taken in each fold)</span>
+      <span class="s2">&quot;cross_folds&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>    <span class="c1">#number of cross folds in CV</span>
+      <span class="s2">&quot;remove_unrealted_leading_features&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>  <span class="c1"># for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.lgbm_estimator.LGBM.fit" title="vpipe.steps.models.lgbm_estimator.LGBM.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(mo[, y])</p></td>
+<td><p>Fit a LGBM model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.lgbm_estimator.LGBM.predict" title="vpipe.steps.models.lgbm_estimator.LGBM.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(mo)</p></td>
+<td><p>Method that use the fitted models to make the prediction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.lgbm_estimator.LGBM.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/lgbm_estimator.html#LGBM.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.lgbm_estimator.LGBM.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit a LGBM model. As a supervised learning algorithm, needs the supervised prep step to be present in the pipeline before the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the features. Established in the supervised prep step</p>
+</dd>
+<dt class="field-even">supervised_target</dt>
+<dd class="field-even"><p>Pandas dataframe containing the target dataset. Established in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mo.env_vars</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">prediction_strategy</dt>
+<dd class="field-odd"><p>Prediction Strategy defined in the supervised prep step</p>
+</dd>
+<dt class="field-even">supervised_categorical_columns</dt>
+<dd class="field-even"><p>Columns that must be treated as categorical, defined in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>mo.env_var: dict</dt><dd><dl class="field-list simple">
+<dt class="field-odd">model_features</dt>
+<dd class="field-odd"><p>Dictionary containing two keys: “feature_columns”: (with a list of the columns used in training) 
+and “feature_importance” (with the average feature_importance of collumns)</p>
+</dd>
+</dl>
+</dd>
+<dt>self.models: dict</dt><dd><p>Dictionary saved as a propertie of the class, that varies according to prediction strategy (defined in the supervised prep step).
+Each key is the future time step (“demand+0”, “demand+1”, …) and the value is tyhe model trained for the timestep</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.lgbm_estimator.LGBM.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/lgbm_estimator.html#LGBM.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.lgbm_estimator.LGBM.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Method that use the fitted models to make the prediction. As a supervised leanring class, the supervised prep step need to be part of the pipeline before the step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.env_var</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">ref_date</dt>
+<dd class="field-odd"><p>Reference date for the forecast period</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the features. Established in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the forecast.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.moving_average">
+<span id="moving-average"></span><h2><strong>Moving Average</strong><a class="headerlink" href="#module-vpipe.steps.models.moving_average" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.moving_average.MovingAverage">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.moving_average.</span></span><span class="sig-name descname"><span class="pre">MovingAverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/moving_average.html#MovingAverage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.moving_average.MovingAverage" title="Permalink to this definition"></a></dt>
+<dd><p>Fits a moving average</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;MovingAverage&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>         <span class="c1"># prediction horizon - mandatory</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span>      <span class="c1"># forecast frequency - mandatory</span>
+        <span class="s2">&quot;lookback&quot;</span><span class="p">:</span> <span class="mi">12</span>        <span class="c1"># defines the window size for which the moving avergae will be calculated - defaul: horizon</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.moving_average.MovingAverage.fit" title="vpipe.steps.models.moving_average.MovingAverage.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Fit the moving average algorithm by calculating the mean for each item location pair, the mean is calculated based on a time window defined as the &quot;lookback&quot;.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.moving_average.MovingAverage.predict" title="vpipe.steps.models.moving_average.MovingAverage.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(mo)</p></td>
+<td><p>Method that use the fitted models to make the prediction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.moving_average.MovingAverage.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/moving_average.html#MovingAverage.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.moving_average.MovingAverage.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit the moving average algorithm by calculating the mean for each item location pair, the mean is calculated based on a time window defined as the “lookback”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>self.mean_dictionary: dict</dt><dd><p>Dictionary with the pair item location as key and the historical mean as value</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.moving_average.MovingAverage.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/moving_average.html#MovingAverage.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.moving_average.MovingAverage.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Method that use the fitted models to make the prediction. As a supervised leanring class, the supervised prep step need to be part of the pipeline before the step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.env_var</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">ref_date</dt>
+<dd class="field-odd"><p>Reference date for the forecast period</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the forecast.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.sarimax">
+<span id="sarimax"></span><h2><strong>Sarimax</strong><a class="headerlink" href="#module-vpipe.steps.models.sarimax" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.sarimax.Sarimax">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.sarimax.</span></span><span class="sig-name descname"><span class="pre">Sarimax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/sarimax.html#Sarimax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.sarimax.Sarimax" title="Permalink to this definition"></a></dt>
+<dd><p>The other params in the params file could be seen in more details in <a class="reference external" href="https://alkaline-ml.com/pmdarima/modules/generated/pmdarima.arima.auto_arima.html">pmdarima’s documentation</a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;Sarimax&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;has_related_data&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>         <span class="c1"># if there is exogenous variables in the dataset</span>
+        <span class="s2">&quot;trend&quot;</span><span class="p">:</span> <span class="s2">&quot;t&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;start_p&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> 
+        <span class="s2">&quot;start_q&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;seasonal&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+        <span class="s2">&quot;m&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;start_P&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;start_Q&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;max_p&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;max_d&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;max_q&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;max_P&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;max_Q&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> 
+        <span class="s2">&quot;max_D&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;max_order&quot;</span> <span class="p">:</span> <span class="mi">100</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>]</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.sarimax.Sarimax.fit" title="vpipe.steps.models.sarimax.Sarimax.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[, y])</p></td>
+<td><p>Method that fits the SARIMAX and save the models into an attribute called models_sarimax using all the other step functions from the class</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.sarimax.Sarimax.predict" title="vpipe.steps.models.sarimax.Sarimax.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X)</p></td>
+<td><p>Method predict from the class SARIMAX</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#vpipe.steps.models.sarimax.Sarimax.sarimax_forecasts" title="vpipe.steps.models.sarimax.Sarimax.sarimax_forecasts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sarimax_forecasts</span></code></a>(X)</p></td>
+<td><p>Method predict from the class SARIMAX</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.sarimax.Sarimax.sarimax_models" title="vpipe.steps.models.sarimax.Sarimax.sarimax_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sarimax_models</span></code></a>(timeseries)</p></td>
+<td><p>Method that fits the best SARIMAX model for the dataset using auto_arima</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.sarimax.Sarimax.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/sarimax.html#Sarimax.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.sarimax.Sarimax.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Method that fits the SARIMAX and save the models into an attribute called models_sarimax using all the other step functions from the class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>class 'Model Object'</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>self</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>class Sarimax</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.sarimax.Sarimax.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/sarimax.html#Sarimax.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.sarimax.Sarimax.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Method predict from the class SARIMAX</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>class 'Model Object'</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>X Object with the predicted value as a new attribute</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ModelObject</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.sarimax.Sarimax.sarimax_forecasts">
+<span class="sig-name descname"><span class="pre">sarimax_forecasts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/sarimax.html#Sarimax.sarimax_forecasts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.sarimax.Sarimax.sarimax_forecasts" title="Permalink to this definition"></a></dt>
+<dd><p>Method predict from the class SARIMAX</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ModelObject</em>) – object from class ModelObject</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dataframe with forecasts</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.sarimax.Sarimax.sarimax_models">
+<span class="sig-name descname"><span class="pre">sarimax_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeseries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/sarimax.html#Sarimax.sarimax_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.sarimax.Sarimax.sarimax_models" title="Permalink to this definition"></a></dt>
+<dd><p>Method that fits the best SARIMAX model for the dataset using auto_arima</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timseries</strong> – Dictionary with the timeseries with keys (item_id, location_id)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>All models fitted with auto_arima with keys (item_id, location_id)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-vpipe.steps.models.xgboost_estimator">
+<span id="xgboost-estimator"></span><h2><strong>XGBoost estimator</strong><a class="headerlink" href="#module-vpipe.steps.models.xgboost_estimator" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="vpipe.steps.models.xgboost_estimator.XGBoost">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">vpipe.steps.models.xgboost_estimator.</span></span><span class="sig-name descname"><span class="pre">XGBoost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/xgboost_estimator.html#XGBoost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.xgboost_estimator.XGBoost" title="Permalink to this definition"></a></dt>
+<dd><p>As a supervised learning algorithm must be preceded by the supervised learningstep establishing the prediction strategy (direct/recursive).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;h01&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;enabled&quot;</span><span class="p">:</span><span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;step_name&quot;</span><span class="p">:</span><span class="s2">&quot;XGBoost&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
+        <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>         <span class="c1"># prediction horizon - mandatory</span>
+        <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span>      <span class="c1"># forecast frequency - mandatory </span>
+        <span class="s2">&quot;xgboost_params&quot;</span><span class="p">:</span> <span class="p">{},</span>  <span class="c1"># dictionary with all possible xgboost params to be passed to the model</span>
+        <span class="s2">&quot;cross_validation&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span> <span class="c1">#if cross validation will be performed - default: false</span>
+        <span class="s2">&quot;cross_params_dict&quot;</span><span class="p">:</span> <span class="p">{},</span>   <span class="c1">#dictionary with keys being the params to vary in CV and values the possible values</span>
+        <span class="s2">&quot;cross_lookback&quot;</span><span class="p">:</span> <span class="mi">52</span><span class="p">,</span>  <span class="c1"># size of the train set in CV (how many timestep will be taken in each fold)</span>
+        <span class="s2">&quot;cross_folds&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>    <span class="c1">#number of cross folds in CV</span>
+        <span class="s2">&quot;remove_unrealted_leading_features&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>  <span class="c1"># for the model of time step +x, consider only future feature of +x (discard, features of +x-1, +x+1, ...) -default: false</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.xgboost_estimator.XGBoost.fit" title="vpipe.steps.models.xgboost_estimator.XGBoost.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(mo[, y])</p></td>
+<td><p>Fit a XGBoost model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</p></td>
+<td><p>Get parameters for this estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#vpipe.steps.models.xgboost_estimator.XGBoost.predict" title="vpipe.steps.models.xgboost_estimator.XGBoost.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(mo)</p></td>
+<td><p>Method that use the fitted models to make the prediction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</p></td>
+<td><p>Set the parameters of this estimator.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get_exec_param</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>override_creation_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>override_exec_params</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>transform</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.xgboost_estimator.XGBoost.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/xgboost_estimator.html#XGBoost.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.xgboost_estimator.XGBoost.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit a XGBoost model. As a supervised learning algorithm, needs the supervised prep step to be present in the pipeline before the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the features. Established in the supervised prep step</p>
+</dd>
+<dt class="field-even">supervised_target</dt>
+<dd class="field-even"><p>Pandas dataframe containing the target dataset. Established in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mo.env_vars</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">prediction_strategy</dt>
+<dd class="field-odd"><p>Prediction Strategy defined in the supervised prep step</p>
+</dd>
+<dt class="field-even">supervised_categorical_columns</dt>
+<dd class="field-even"><p>Columns that must be treated as categorical, defined in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>mo.env_var: dict</dt><dd><dl class="field-list simple">
+<dt class="field-odd">model_features</dt>
+<dd class="field-odd"><p>Dictionary containing two keys: “feature_columns”: (with a list of the columns used in training) 
+and “feature_importance” (with the average feature_importance of collumns)</p>
+</dd>
+</dl>
+</dd>
+<dt>self.models: dict</dt><dd><p>Dictionary saved as a propertie of the class, that varies according to prediction strategy (defined in the supervised prep step).
+Each key is the future time step (“demand+0”, “demand+1”, …) and the value is tyhe model trained for the timestep</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="vpipe.steps.models.xgboost_estimator.XGBoost.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">vbrainer.pipeline.model_objects.ml_model_object.MLModelObject</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/vpipe/steps/models/xgboost_estimator.html#XGBoost.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#vpipe.steps.models.xgboost_estimator.XGBoost.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Method that use the fitted models to make the prediction. As a supervised learning class, the supervised prep step need to be part of the pipeline before the step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mo.env_var</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">ref_date</dt>
+<dd class="field-odd"><p>Reference date for the forecast period</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the features. Established in the supervised prep step</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mo.data_map</strong><span class="classifier">dict</span></dt><dd><dl class="field-list simple">
+<dt class="field-odd">supervised_dataset</dt>
+<dd class="field-odd"><p>Pandas dataframe containing the forecast.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="input.html" class="btn btn-neutral float-left" title="Input steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../post_creation.html" class="btn btn-neutral float-right" title="Post Creation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, VBrain.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
