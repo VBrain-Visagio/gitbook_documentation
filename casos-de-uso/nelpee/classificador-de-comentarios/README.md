@@ -1,4 +1,4 @@
-# Classificador de Comentários
+# Transcrição de áudios
 Esta solução tem como objetivo classificar comentários em categorias definidas pelo usuário. Como exemplo de uso, um usuário pode inserir como input uma base de comentários de um E-Commerce de roupas e classificar as avaliações pelos seguintes temas: Tecido, Costura, Pintura, Estampa, entre outras. O modelo aceita qualquer categoria e não exige uma base de treino para a classificação.
 
 ## Objetivos
